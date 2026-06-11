@@ -1,15 +1,16 @@
 import Foundation
 import IOBluetooth
 
-private let defaultRFCOMMChannel: BluetoothRFCOMMChannelID = 15
-private let scanRange: ClosedRange<BluetoothRFCOMMChannelID> = 1...30
-private let listenDuration: TimeInterval = 10
+private let probeChannels: [BluetoothRFCOMMChannelID] = [12, 13, 15, 17, 29]
+private let openTimeout: TimeInterval = 8
+private let responseTimeout: TimeInterval = 5
+private let closeTimeout: TimeInterval = 3
+private let interPacketDelay: TimeInterval = 0.05
+private let interChannelDelay: TimeInterval = 1
 
 enum PoCError: Error, CustomStringConvertible {
     case invalidArgument(String)
     case deviceNotFound(String?)
-    case rfcommConnectFailed(BluetoothRFCOMMChannelID, IOReturn)
-    case noOpenChannel
 
     var description: String {
         switch self {
@@ -20,40 +21,60 @@ enum PoCError: Error, CustomStringConvertible {
                 return "No paired Bluetooth device matched: \(target)"
             }
             return "No paired OPPO/Enco device was found"
-        case .rfcommConnectFailed(let channel, let status):
-            return "RFCOMM channel \(channel) connect failed: \(formatIOReturn(status))"
-        case .noOpenChannel:
-            return "No RFCOMM channel could be opened"
         }
     }
 }
 
 struct Options {
     var target: String?
-    var explicitChannel: BluetoothRFCOMMChannelID?
     var listOnly = false
 }
 
-struct RFCOMMFailure: Error {
-    let channelID: BluetoothRFCOMMChannelID
-    let status: IOReturn
-
-    var message: String {
-        "RFCOMM channel \(channelID) connect failed: \(formatIOReturn(status))"
-    }
+struct ProbePacket {
+    let name: String
+    let source: String
+    let raw: [UInt8]
 }
 
-final class RFCOMMListener: NSObject {
-    private(set) var isClosed = false
+struct ProbeResult {
+    let channelID: BluetoothRFCOMMChannelID
+    let openStatus: IOReturn?
+    let responses: [Data]
+    let note: String
+}
+
+enum OppoProbePackets {
+    static let enableStatusPush = ProbePacket(
+        name: "Enable Status Push",
+        source: "Packets.kt lines 211-214; RfcommController.kt lines 968-971",
+        raw: [0xAA, 0x09, 0x00, 0x00, 0x05, 0x02, 0x3A, 0x02, 0x00, 0x01, 0x02]
+    )
+
+    static let queryBattery = ProbePacket(
+        name: "Battery Query",
+        source: "Packets.kt lines 206-209; RfcommController.kt lines 970-974",
+        raw: [0xAA, 0x07, 0x00, 0x00, 0x06, 0x01, 0xF0, 0x00, 0x00]
+    )
+
+    static let all: [ProbePacket] = [
+        enableStatusPush,
+        queryBattery
+    ]
+}
+
+final class ProtocolProbeListener: NSObject {
+    private(set) var channel: IOBluetoothRFCOMMChannel?
+    private(set) var openStatus: IOReturn?
+    private(set) var didClose = false
+    private(set) var responses: [Data] = []
 
     @objc func rfcommChannelOpenComplete(_ rfcommChannel: IOBluetoothRFCOMMChannel!, status: IOReturn) {
-        print("OPEN:")
-        print(formatIOReturn(status))
+        channel = rfcommChannel
+        openStatus = status
     }
 
     @objc func rfcommChannelClosed(_ rfcommChannel: IOBluetoothRFCOMMChannel!) {
-        isClosed = true
-        print("CLOSED")
+        didClose = true
     }
 
     @objc func rfcommChannelData(
@@ -63,12 +84,40 @@ final class RFCOMMListener: NSObject {
     ) {
         guard let dataPointer, dataLength > 0 else { return }
         let data = Data(bytes: dataPointer, count: dataLength)
+        responses.append(data)
+
         print("RECV:")
         print(data.hexString)
+    }
+
+    @objc func rfcommChannelWriteComplete(
+        _ rfcommChannel: IOBluetoothRFCOMMChannel!,
+        refcon: UnsafeMutableRawPointer!,
+        status: IOReturn
+    ) {
+        print("WRITE COMPLETE:")
+        print(formatIOReturn(status))
+    }
+
+    @objc func rfcommChannelWriteComplete(
+        _ rfcommChannel: IOBluetoothRFCOMMChannel!,
+        refcon: UnsafeMutableRawPointer!,
+        status: IOReturn,
+        bytesWritten: Int
+    ) {
+        print("WRITE COMPLETE:")
+        print(formatIOReturn(status))
+        print("BYTES WRITTEN: \(bytesWritten)")
     }
 }
 
 extension Data {
+    var hexString: String {
+        map { String(format: "%02X", $0) }.joined(separator: " ")
+    }
+}
+
+extension Array where Element == UInt8 {
     var hexString: String {
         map { String(format: "%02X", $0) }.joined(separator: " ")
     }
@@ -85,11 +134,6 @@ func parseOptions() throws -> Options {
                 throw PoCError.invalidArgument(argument)
             }
             options.target = value
-        case "--channel":
-            guard let value = iterator.next(), let channel = UInt8(value) else {
-                throw PoCError.invalidArgument(argument)
-            }
-            options.explicitChannel = BluetoothRFCOMMChannelID(channel)
         case "--list":
             options.listOnly = true
         case "--help", "-h":
@@ -113,9 +157,6 @@ func printUsage() {
       OppoPodsRfcommPoC --name "OPPO Enco Air4 Pro"
       OppoPodsRfcommPoC --address "AA-BB-CC-DD-EE-FF"
       OppoPodsRfcommPoC --list
-
-    Options:
-      --channel 15       Try one RFCOMM channel only.
     """)
 }
 
@@ -163,72 +204,141 @@ func normalize(_ value: String) -> String {
         .filter { $0.isLetter || $0.isNumber }
 }
 
-func openRFCOMMChannel(
-    device: IOBluetoothDevice,
-    channelID: BluetoothRFCOMMChannelID,
-    listener: RFCOMMListener
-) -> Result<IOBluetoothRFCOMMChannel, RFCOMMFailure> {
-    var channel: IOBluetoothRFCOMMChannel?
-    let status = device.openRFCOMMChannelSync(&channel, withChannelID: channelID, delegate: listener)
+func runProbe(device: IOBluetoothDevice, channelID: BluetoothRFCOMMChannelID) -> ProbeResult {
+    print("")
+    print("CHANNEL \(channelID)")
 
-    guard status == kIOReturnSuccess, let channel else {
-        return .failure(RFCOMMFailure(channelID: channelID, status: status))
+    let listener = ProtocolProbeListener()
+    var openedChannel: IOBluetoothRFCOMMChannel?
+    let startStatus = device.openRFCOMMChannelAsync(
+        &openedChannel,
+        withChannelID: channelID,
+        delegate: listener
+    )
+
+    guard startStatus == kIOReturnSuccess else {
+        print("RESULT:")
+        print("open failed: \(formatIOReturn(startStatus))")
+        return ProbeResult(channelID: channelID, openStatus: startStatus, responses: [], note: "open start failed")
     }
 
-    return .success(channel)
-}
-
-func tryChannel15(device: IOBluetoothDevice, listener: RFCOMMListener) -> Result<IOBluetoothRFCOMMChannel, RFCOMMFailure> {
-    print("Trying RFCOMM Channel 15...")
-    let result = openRFCOMMChannel(device: device, channelID: defaultRFCOMMChannel, listener: listener)
-
-    switch result {
-    case .success:
-        print("SUCCESS")
-    case .failure(let failure):
-        print("FAILED: \(failure.message)")
+    let openDeadline = Date().addingTimeInterval(openTimeout)
+    while listener.openStatus == nil && !listener.didClose && Date() < openDeadline {
+        RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
     }
 
-    return result
-}
+    guard let openStatus = listener.openStatus else {
+        closeIfNeeded(openedChannel ?? listener.channel)
+        print("RESULT:")
+        print("open timeout")
+        return ProbeResult(channelID: channelID, openStatus: nil, responses: [], note: "open complete timeout")
+    }
 
-func scanRFCOMMChannels(
-    device: IOBluetoothDevice,
-    listener: RFCOMMListener,
-    cachedChannel15Failure: RFCOMMFailure
-) -> IOBluetoothRFCOMMChannel? {
-    print("Scanning RFCOMM channels 1...30")
+    guard openStatus == kIOReturnSuccess else {
+        closeIfNeeded(openedChannel ?? listener.channel)
+        print("RESULT:")
+        print("open failed: \(formatIOReturn(openStatus))")
+        return ProbeResult(channelID: channelID, openStatus: openStatus, responses: [], note: "open complete failed")
+    }
 
-    for channelID in scanRange {
-        if channelID == cachedChannel15Failure.channelID {
-            print("Channel \(channelID) -> failed: \(formatIOReturn(cachedChannel15Failure.status))")
-            continue
+    guard let channel = openedChannel ?? listener.channel else {
+        print("RESULT:")
+        print("open failed: channel object nil")
+        return ProbeResult(channelID: channelID, openStatus: openStatus, responses: [], note: "channel object nil")
+    }
+
+    for packet in OppoProbePackets.all {
+        print("")
+        print(packet.name)
+        print("Source:")
+        print(packet.source)
+        print("SEND:")
+        print(packet.raw.hexString)
+
+        if !write(packet.raw, to: channel) {
+            close(channel: channel, listener: listener)
+            return ProbeResult(channelID: channelID, openStatus: openStatus, responses: listener.responses, note: "write failed")
         }
 
-        switch openRFCOMMChannel(device: device, channelID: channelID, listener: listener) {
-        case .success(let channel):
-            print("Channel \(channelID) -> success")
-            return channel
-        case .failure(let failure):
-            print("Channel \(channelID) -> failed: \(formatIOReturn(failure.status))")
-        }
+        RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: interPacketDelay))
     }
 
-    return nil
+    let responseDeadline = Date().addingTimeInterval(responseTimeout)
+    while !listener.didClose && Date() < responseDeadline {
+        RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
+    }
+
+    let note = listener.responses.isEmpty ? "no response" : "response received"
+    print("RESULT:")
+    print(note)
+
+    close(channel: channel, listener: listener)
+
+    RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: interChannelDelay))
+
+    return ProbeResult(
+        channelID: channelID,
+        openStatus: openStatus,
+        responses: listener.responses,
+        note: note
+    )
 }
 
-func keepConnectionAlive(channel: IOBluetoothRFCOMMChannel, listener: RFCOMMListener) {
-    print("Connected RFCOMM Channel: \(channel.getID())")
-    print("Listening for 10 seconds...")
+func write(_ bytes: [UInt8], to channel: IOBluetoothRFCOMMChannel) -> Bool {
+    var mutableBytes = bytes
+    let status = mutableBytes.withUnsafeMutableBytes { buffer in
+        channel.writeSync(buffer.baseAddress, length: UInt16(buffer.count))
+    }
 
-    let deadline = Date().addingTimeInterval(listenDuration)
-    while !listener.isClosed && Date() < deadline {
+    guard status == kIOReturnSuccess else {
+        print("WRITE FAILED:")
+        print(formatIOReturn(status))
+        return false
+    }
+
+    return true
+}
+
+func close(channel: IOBluetoothRFCOMMChannel, listener: ProtocolProbeListener) {
+    channel.close()
+
+    let deadline = Date().addingTimeInterval(closeTimeout)
+    while !listener.didClose && Date() < deadline {
         RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
     }
 }
 
-func formatIOReturn(_ value: IOReturn) -> String {
-    "0x" + String(UInt32(bitPattern: value), radix: 16, uppercase: true)
+func closeIfNeeded(_ channel: IOBluetoothRFCOMMChannel?) {
+    guard let channel else { return }
+    channel.close()
+}
+
+func printRanking(_ results: [ProbeResult]) {
+    print("")
+    print("Protocol Candidate Ranking")
+
+    let ranked = results.sorted { left, right in
+        if left.responses.count == right.responses.count {
+            return left.channelID < right.channelID
+        }
+        return left.responses.count > right.responses.count
+    }
+
+    for result in ranked {
+        print("")
+        print("Channel \(result.channelID)")
+        print("response count: \(result.responses.count)")
+        print("bytes received: \(result.responses.reduce(0) { $0 + $1.count })")
+        print("result: \(result.note)")
+    }
+
+    if let best = ranked.first(where: { !$0.responses.isEmpty }) {
+        print("")
+        print("Most likely OppoPods control channel: \(best.channelID)")
+    } else {
+        print("")
+        print("Most likely OppoPods control channel: none")
+    }
 }
 
 func run() throws {
@@ -245,40 +355,15 @@ func run() throws {
     print("Target Device: \(deviceName)")
     print("Target Address: \(device.addressString ?? "(no address)")")
 
-    let listener = RFCOMMListener()
-    let channel: IOBluetoothRFCOMMChannel
-
-    if let explicitChannel = options.explicitChannel {
-        print("Trying RFCOMM Channel \(explicitChannel)...")
-        switch openRFCOMMChannel(device: device, channelID: explicitChannel, listener: listener) {
-        case .success(let openedChannel):
-            print("SUCCESS")
-            channel = openedChannel
-        case .failure(let failure):
-            print("FAILED: \(failure.message)")
-            throw PoCError.rfcommConnectFailed(failure.channelID, failure.status)
-        }
-    } else {
-        switch tryChannel15(device: device, listener: listener) {
-        case .success(let openedChannel):
-            channel = openedChannel
-        case .failure(let failure):
-            guard let scannedChannel = scanRFCOMMChannels(
-                device: device,
-                listener: listener,
-                cachedChannel15Failure: failure
-            ) else {
-                throw PoCError.noOpenChannel
-            }
-            channel = scannedChannel
-        }
+    let results = probeChannels.map { channelID in
+        runProbe(device: device, channelID: channelID)
     }
 
-    defer {
-        channel.close()
-    }
+    printRanking(results)
+}
 
-    keepConnectionAlive(channel: channel, listener: listener)
+func formatIOReturn(_ value: IOReturn) -> String {
+    "0x" + String(UInt32(bitPattern: value), radix: 16, uppercase: true)
 }
 
 do {
