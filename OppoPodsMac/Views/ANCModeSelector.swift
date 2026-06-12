@@ -1,7 +1,49 @@
 import SwiftUI
 
+enum ANCModeSelectorSize {
+    case compact
+    case regular
+
+    var iconSize: CGFloat {
+        switch self {
+        case .compact:
+            return 22
+        case .regular:
+            return 26
+        }
+    }
+
+    var controlHeight: CGFloat {
+        switch self {
+        case .compact:
+            return 52
+        case .regular:
+            return 60
+        }
+    }
+
+    var titleFont: Font {
+        switch self {
+        case .compact:
+            return .callout.weight(.semibold)
+        case .regular:
+            return .headline
+        }
+    }
+
+    var labelFont: Font {
+        switch self {
+        case .compact:
+            return .caption
+        case .regular:
+            return .callout
+        }
+    }
+}
+
 struct ANCModeSelector: View {
     @ObservedObject var viewModel: EarbudsViewModel
+    var size: ANCModeSelectorSize = .compact
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var selectionNamespace
 
@@ -12,7 +54,7 @@ struct ANCModeSelector: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("降噪模式")
-                .font(.callout.weight(.semibold))
+                .font(size.titleFont)
 
             VStack(spacing: 4) {
                 ZStack {
@@ -26,7 +68,7 @@ struct ANCModeSelector: View {
                     }
                     .padding(4)
                 }
-                .frame(height: 52)
+                .frame(height: size.controlHeight)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, -4)
 
@@ -35,7 +77,6 @@ struct ANCModeSelector: View {
                         modeTitle(mode)
                     }
                 }
-                .opacity(isControlDisabled ? 0.55 : 1)
             }
         }
         .disabled(isControlDisabled)
@@ -43,7 +84,6 @@ struct ANCModeSelector: View {
 
     private func modeButton(_ mode: ANCMode, systemImage: String) -> some View {
         let isSelected = viewModel.ancMode == mode
-        let isUnavailable = mode == .noiseCancellation
 
         return Button {
             handleSelection(mode)
@@ -60,9 +100,8 @@ struct ANCModeSelector: View {
                 }
 
                 Image(systemName: systemImage)
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: size.iconSize, weight: .semibold))
                     .foregroundStyle(isSelected ? .primary : .secondary)
-                    .opacity(isUnavailable ? 0.4 : 1)
                     .scaleEffect(isSelected && !reduceMotion ? 1.04 : 1)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -75,28 +114,17 @@ struct ANCModeSelector: View {
 
     private func modeTitle(_ mode: ANCMode) -> some View {
         let isSelected = viewModel.ancMode == mode
-        let isUnavailable = mode == .noiseCancellation
 
         return Text(mode.localizedTitle)
-            .font(.caption)
+            .font(size.labelFont)
             .fontWeight(isSelected ? .semibold : .regular)
             .foregroundStyle(isSelected ? .primary : .secondary)
-            .opacity(isUnavailable ? 0.45 : 1)
             .frame(maxWidth: .infinity)
     }
 
     private func handleSelection(_ mode: ANCMode) {
-        switch mode {
-        case .off:
-            Task {
-                await viewModel.setANC(.off)
-            }
-        case .transparency:
-            Task {
-                await viewModel.setANC(.transparency)
-            }
-        case .noiseCancellation:
-            viewModel.addDebugLog("Noise Cancellation not verified yet")
+        Task {
+            await viewModel.setANC(mode)
         }
     }
 }

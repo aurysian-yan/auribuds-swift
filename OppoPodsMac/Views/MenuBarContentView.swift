@@ -1,55 +1,110 @@
+import AppKit
 import SwiftUI
 
 struct MenuBarContentView: View {
-    @ObservedObject var viewModel: EarbudsViewModel
+    @EnvironmentObject private var viewModel: EarbudsViewModel
+    @Environment(\.openWindow) private var openWindow
     @State private var isDebugExpanded = false
+    @State private var blinkStatusDot = false
 
+    private var statusDotColor: Color {
+        switch viewModel.state.connectionStatus {
+        case .connected:
+            return .green
+
+        case .disconnected:
+            return .red
+
+        case .connecting, .handshaking, .reconnecting:
+            return .white
+
+        case .error, .handshakeFailed:
+            return .yellow
+        }
+    }
+
+    private var shouldBlinkStatusDot: Bool {
+        switch viewModel.state.connectionStatus {
+        case .connecting, .handshaking, .reconnecting:
+            return true
+        default:
+            return false
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(statusDotColor)
+                        .frame(width: 8, height: 8)
+                        .opacity(shouldBlinkStatusDot ? (blinkStatusDot ? 0.25 : 1.0) : 1.0)
+                        .onAppear {
+                            blinkStatusDot = false
+
+                            if shouldBlinkStatusDot {
+                                withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+                                    blinkStatusDot = true
+                                }
+                            }
+                        }
+                        .onChange(of: shouldBlinkStatusDot) { _, isBlinking in
+                            blinkStatusDot = false
+
+                            if isBlinking {
+                                withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+                                    blinkStatusDot = true
+                                }
+                            }
+                        }
+
+                    Text(viewModel.state.connectionStatus.localizedTitle)
+                        .font(.callout) // 比 caption 大一号
+                        .foregroundStyle(.secondary) // 文字颜色固定，不跟状态变
+                }
+
                 Text(viewModel.state.deviceName)
-                    .font(.headline)
-                Text(viewModel.state.connectionStatus.localizedTitle)
-                    .font(.caption)
-                    .foregroundStyle(statusColor)
+                    .font(.largeTitle)
+            }
+
+            HStack() {
+                BatteryRowView(value: viewModel.state.battery.text(for: .left)) {
+                    Image(systemName: "l.circle.fill")
+                        .font(.system(size: 14))
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("Left")
+                }
+
+                BatteryRowView(value: viewModel.state.battery.text(for: .right)) {
+                    Image(systemName: "r.circle.fill")
+                        .font(.system(size: 14))
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("Right")
+                }
+
+                BatteryRowView(value: viewModel.state.battery.text(for: .batteryCase)) {
+                    Image("oppobuds.case.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 16, height: 16)
+                        .accessibilityLabel("Case")
+                }
             }
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 2) {
-                BatteryRowView(title: "Left", value: viewModel.state.battery.text(for: .left))
-                BatteryRowView(title: "Right", value: viewModel.state.battery.text(for: .right))
-                BatteryRowView(title: "Case", value: viewModel.state.battery.text(for: .batteryCase))
-            }
-
-            Divider()
-
-            ANCModeSelector(viewModel: viewModel)
+            ANCModeSelector(viewModel: viewModel, size: .compact)
                 .disabled(viewModel.state.connectionStatus != .connected)
 
-            HStack {
-                Button("刷新") {
-                    Task {
-                        await viewModel.refreshBattery()
-                    }
-                }
-                .disabled(viewModel.state.connectionStatus != .connected || viewModel.isBusy)
-
-                Button("重连") {
-                    Task {
-                        await viewModel.reconnect()
-                    }
-                }
-                .disabled(viewModel.isBusy)
-
-                if viewModel.state.connectionStatus == .disconnected || viewModel.state.connectionStatus == .error || viewModel.state.connectionStatus == .handshakeFailed {
-                    Button("连接") {
-                        Task {
-                            await viewModel.connect()
-                        }
-                    }
-                    .disabled(viewModel.isBusy)
-                }
+            Divider()
+            Button("打开主窗口") {
+                openWindow(id: "main")
+                NSApplication.shared.activate(ignoringOtherApps: true)
             }
             .buttonStyle(.borderless)
             .controlSize(.small)
@@ -59,32 +114,11 @@ struct MenuBarContentView: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-
-            Divider()
-
-            DisclosureGroup(isExpanded: $isDebugExpanded) {
-                DebugLogView(events: viewModel.debugEvents)
-                    .padding(.top, 4)
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Debug Log")
-                    if !isDebugExpanded, let latest = viewModel.latestDebugEvent {
-                        Text(latest)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .opacity(0.65)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-                }
-            }
+            
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
         .frame(width: 320)
-        .onAppear {
-            viewModel.start()
-        }
     }
 
     private var statusColor: Color {
@@ -102,5 +136,6 @@ struct MenuBarContentView: View {
 }
 
 #Preview {
-    MenuBarContentView(viewModel: EarbudsViewModel())
+    MenuBarContentView()
+        .environmentObject(EarbudsViewModel())
 }

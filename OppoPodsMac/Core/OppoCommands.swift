@@ -33,6 +33,7 @@ enum OppoResponseMatcher: Equatable {
     case none
     case battery
     case anc
+    case ancMode(UInt8)
 
     func matches(_ data: Data) -> Bool {
         switch self {
@@ -42,6 +43,8 @@ enum OppoResponseMatcher: Equatable {
             return OppoFrameParser.isBatteryResponse(data)
         case .anc:
             return OppoFrameParser.isANCResponse(data)
+        case .ancMode(let modeValue):
+            return OppoFrameParser.isANCModeResponse(data, modeValue: modeValue)
         }
     }
 }
@@ -103,6 +106,19 @@ enum OppoCommands {
         bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x01]),
         expectedResponse: .anc,
         timeout: 0.8
+    )
+
+    static let setNoiseCancellation = OppoCommand(
+        name: "Set Noise Cancellation",
+        sources: [
+            "Packets.kt lines 12-28",
+            "Packets.kt lines 32-39",
+            "Packets.kt lines 152-155",
+            "RfcommController.kt lines 959-975"
+        ],
+        bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x02]),
+        expectedResponse: .ancMode(0x02),
+        timeout: 1.5
     )
 
     private static func buildPacket(command: UInt16, sequence: UInt8 = 0xF0, payload: [UInt8] = []) -> [UInt8] {

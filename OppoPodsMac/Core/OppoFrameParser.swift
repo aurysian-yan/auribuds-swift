@@ -1,6 +1,8 @@
 import Foundation
 
 enum OppoFrameParser {
+    private static let ancAckBytes: [UInt8] = [0xAA, 0x08, 0x00, 0x00, 0x04, 0x84, 0xF0, 0x01, 0x00, 0x00]
+
     static func decodeBattery(from data: Data) -> BatteryState? {
         let bytes = Array(data)
         guard bytes.count >= 4 else { return nil }
@@ -47,6 +49,24 @@ enum OppoFrameParser {
         isANCCandidateFrame(data)
     }
 
+    static func isANCModeResponse(_ data: Data, modeValue: UInt8) -> Bool {
+        let bytes = Array(data)
+        guard bytes.count >= 6, bytes.contains(0xAA) else { return false }
+        guard !containsSequence(ancAckBytes, in: bytes) else { return true }
+
+        for index in 0..<(bytes.count - 1) {
+            let isModeFrame = (bytes[index] == 0x0C && bytes[index + 1] == 0x81)
+                || (bytes[index] == 0x04 && bytes[index + 1] == 0x02)
+            guard isModeFrame else { continue }
+
+            if containsANCModePayload(modeValue, in: bytes, from: index + 2) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     private static func parseBatteryFields(in bytes: [UInt8], after startIndex: Int) -> (left: UInt8, right: UInt8, batteryCase: UInt8)? {
         guard startIndex <= bytes.count - 7 else { return nil }
 
@@ -70,5 +90,27 @@ enum OppoFrameParser {
     private static func normalizedBatteryValue(_ value: UInt8) -> UInt8? {
         guard value != 0x00 && value != 0xFF else { return nil }
         return value
+    }
+
+    private static func containsANCModePayload(_ modeValue: UInt8, in bytes: [UInt8], from startIndex: Int) -> Bool {
+        guard startIndex <= bytes.count - 3 else { return false }
+
+        for index in startIndex...(bytes.count - 3) where bytes[index] == 0x01 && bytes[index + 1] == 0x01 && bytes[index + 2] == modeValue {
+            return true
+        }
+
+        return false
+    }
+
+    private static func containsSequence(_ sequence: [UInt8], in bytes: [UInt8]) -> Bool {
+        guard !sequence.isEmpty, sequence.count <= bytes.count else { return false }
+
+        for index in 0...(bytes.count - sequence.count) {
+            if Array(bytes[index..<(index + sequence.count)]) == sequence {
+                return true
+            }
+        }
+
+        return false
     }
 }

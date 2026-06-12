@@ -19,7 +19,7 @@ struct BatteryState: Equatable {
         }
 
         guard let value else {
-            return "–"
+            return "--"
         }
 
         return "\(value)%"

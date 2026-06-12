@@ -5,6 +5,8 @@ enum OppoProtocolError: Error, LocalizedError, Equatable {
     case handshakeFailed
     case batteryDecodeFailed
     case unsupportedANCMode
+    case commandInFlight(String)
+    case commandBlocked(String)
     case commandTimeout(String)
 
     var errorDescription: String? {
@@ -17,13 +19,17 @@ enum OppoProtocolError: Error, LocalizedError, Equatable {
             return "电量解析失败"
         case .unsupportedANCMode:
             return "此模式暂未支持"
+        case .commandInFlight(let commandName):
+            return "\(commandName) 正在执行"
+        case .commandBlocked(let reason):
+            return reason
         case .commandTimeout(let commandName):
             return "\(commandName) 响应超时"
         }
     }
 }
 
-enum ConnectionState {
+enum ConnectionState: Equatable {
     case disconnected
     case connecting
     case handshaking
@@ -69,6 +75,10 @@ actor OppoProtocolBackend {
     private var connectTask: Task<Void, Error>?
     private var activeDeviceName: String?
     private var latestBattery = BatteryState.unknown
+    private var hasSafeHandshakePassed = false
+    private var hasBatteryResponse = false
+    private var isRefreshingBattery = false
+    private var inFlightCommandName: String?
     private var onEvent: ((String) -> Void)?
 
     func setEventHandler(_ onEvent: ((String) -> Void)?) {
@@ -96,6 +106,8 @@ actor OppoProtocolBackend {
     func refreshBattery(deviceName: String) async throws -> BatteryState {
         activeDeviceName = deviceName
         try await connectIfNeeded(deviceName: deviceName)
+        isRefreshingBattery = true
+        defer { isRefreshingBattery = false }
 
         do {
             let battery = try await requestBattery()
@@ -124,19 +136,19 @@ actor OppoProtocolBackend {
         case .transparency:
             command = OppoCommands.setTransparency
         case .noiseCancellation:
-            throw OppoProtocolError.unsupportedANCMode
+            command = OppoCommands.setNoiseCancellation
         }
 
-        do {
-            try await send(command)
-        } catch {
-            if isStaleConnectionError(error) {
-                try await reconnect(deviceName: deviceName)
-                try await send(command)
-                return
-            }
+        if mode == .noiseCancellation {
+            try validateNoiseCancellationGate()
+        }
 
-            throw error
+        let startedAt = Date()
+        try await send(command)
+
+        if mode == .noiseCancellation {
+            let elapsed = Date().timeIntervalSince(startedAt)
+            emit(String(format: "setANC(noiseCancellation) completed in %.3fs", elapsed))
         }
     }
 
@@ -175,6 +187,8 @@ actor OppoProtocolBackend {
     private func establishConnection(deviceName: String) async throws {
         closeConnection()
         connectionState = .connecting
+        hasSafeHandshakePassed = false
+        hasBatteryResponse = false
 
         do {
             let connection = try transport.connect(deviceName: deviceName) { [weak self] event in
@@ -188,6 +202,7 @@ actor OppoProtocolBackend {
             try await send(OppoCommands.enableStatusPush)
             latestBattery = try await requestBattery()
             connectionState = .connected
+            hasSafeHandshakePassed = true
             emit("safe handshake passed")
         } catch {
             closeConnection()
@@ -201,6 +216,7 @@ actor OppoProtocolBackend {
 
         for frame in responses {
             if let battery = OppoFrameParser.decodeBattery(from: frame) {
+                hasBatteryResponse = true
                 return battery
             }
         }
@@ -219,6 +235,13 @@ actor OppoProtocolBackend {
             throw OppoProtocolError.notConnected
         }
 
+        if let inFlightCommandName {
+            throw OppoProtocolError.commandInFlight(inFlightCommandName)
+        }
+
+        inFlightCommandName = command.name
+        defer { inFlightCommandName = nil }
+
         return try await commandQueue.execute(
             command,
             connection: connection,
@@ -233,6 +256,44 @@ actor OppoProtocolBackend {
     private func closeConnection() {
         connection?.close()
         connection = nil
+        hasSafeHandshakePassed = false
+        hasBatteryResponse = false
+    }
+
+    private func validateNoiseCancellationGate() throws {
+        guard let connection, connection.isOpen else {
+            try blockNoiseCancellation("RFCOMM Channel 15 not connected")
+            return
+        }
+
+        guard hasSafeHandshakePassed else {
+            try blockNoiseCancellation("Safe Handshake not passed")
+            return
+        }
+
+        guard hasBatteryResponse else {
+            try blockNoiseCancellation("Battery Response not received")
+            return
+        }
+
+        if let inFlightCommandName {
+            try blockNoiseCancellation("in-flight command \(inFlightCommandName)")
+        }
+
+        guard connectionState != .reconnecting else {
+            try blockNoiseCancellation("reconnecting")
+            return
+        }
+
+        guard !isRefreshingBattery else {
+            try blockNoiseCancellation("refreshing battery")
+            return
+        }
+    }
+
+    private func blockNoiseCancellation(_ reason: String) throws {
+        emit("skip Set Noise Cancellation: \(reason)")
+        throw OppoProtocolError.commandBlocked(reason)
     }
 
     private func isStaleConnectionError(_ error: Error) -> Bool {
@@ -266,8 +327,13 @@ actor OppoCommandQueue {
         while true {
             do {
                 let baseline = connection.responseCount
-                onEvent("send command \(command.name)")
-                onEvent("send hex \(command.hexString)")
+                if command.name == "Set Noise Cancellation" {
+                    onEvent("SEND Set Noise Cancellation:")
+                    onEvent(command.hexString)
+                } else {
+                    onEvent("send command \(command.name)")
+                    onEvent("send hex \(command.hexString)")
+                }
                 try connection.write(command)
 
                 let responses = connection.waitForMatchingResponses(
@@ -275,6 +341,13 @@ actor OppoCommandQueue {
                     timeout: command.timeout,
                     matcher: command.expectedResponse
                 )
+
+                if command.name == "Set Noise Cancellation" {
+                    for response in responses where OppoFrameParser.isANCCandidateFrame(response) {
+                        onEvent("ANC CANDIDATE FRAME:")
+                        onEvent(response.hexString)
+                    }
+                }
 
                 if command.expectedResponse == .none || responses.contains(where: { command.expectedResponse.matches($0) }) {
                     return responses

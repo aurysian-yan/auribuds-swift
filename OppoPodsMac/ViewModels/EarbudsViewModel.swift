@@ -7,6 +7,7 @@ final class EarbudsViewModel: ObservableObject {
     @Published private(set) var debugEvents: [String] = []
     @Published private(set) var isBusy = false
     @Published private(set) var isWritingANC = false
+    @Published private(set) var lastRefreshDate: Date?
 
     private let protocolClient = OppoProtocol()
     private var hasStarted = false
@@ -95,6 +96,7 @@ final class EarbudsViewModel: ObservableObject {
             let battery = try await client.refreshBattery(deviceName: deviceName)
             state.battery = battery
             state.connectionStatus = .connected
+            lastRefreshDate = Date()
         } catch let error as OppoProtocolError where error == .batteryDecodeFailed {
             state.battery = .unknown
             state.lastError = error.localizedDescription
@@ -143,8 +145,8 @@ final class EarbudsViewModel: ObservableObject {
 
     private func appendDebugEvent(_ event: String) {
         debugEvents.append(event)
-        if debugEvents.count > 10 {
-            debugEvents.removeFirst(debugEvents.count - 10)
+        if debugEvents.count > 50 {
+            debugEvents.removeFirst(debugEvents.count - 50)
         }
     }
 
@@ -165,6 +167,7 @@ final class EarbudsViewModel: ObservableObject {
 
             state.battery = battery
             state.connectionStatus = .connected
+            lastRefreshDate = Date()
             appendDebugEvent(isAutomatic ? "Auto connect passed" : "connect passed")
             startAutoRefresh()
         } catch let error as OppoProtocolError where error == .batteryDecodeFailed || error == .handshakeFailed {

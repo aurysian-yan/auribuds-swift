@@ -5,8 +5,21 @@ struct OppoPodsMacApp: App {
     @StateObject private var viewModel = EarbudsViewModel()
 
     var body: some Scene {
-        MenuBarExtra("OppoPods", systemImage: "earbuds") {
-            MenuBarContentView(viewModel: viewModel)
+        WindowGroup("OppoPodsMac", id: "main") {
+            MainWindowView()
+                .environmentObject(viewModel)
+                .onAppear {
+                    viewModel.start()
+                }
+        }
+        .defaultSize(width: 720, height: 520)
+
+        MenuBarExtra("OppoPodsMac", systemImage: "earbuds") {
+            MenuBarContentView()
+                .environmentObject(viewModel)
+                .onAppear {
+                    viewModel.start()
+                }
         }
         .menuBarExtraStyle(.window)
     }

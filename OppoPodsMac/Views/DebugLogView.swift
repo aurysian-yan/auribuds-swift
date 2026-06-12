@@ -6,18 +6,27 @@ struct DebugLogView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if events.isEmpty {
-                Text("No events")
+                Text("暂无日志")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(Array(events.enumerated()), id: \.offset) { _, event in
-                    Text(event)
+                    Text(truncated(event))
                         .font(.caption2)
                         .lineLimit(2)
                         .textSelection(.enabled)
                 }
             }
         }
+    }
+
+    private func truncated(_ event: String) -> String {
+        let limit = 180
+        guard event.count > limit else {
+            return event
+        }
+
+        return String(event.prefix(limit)) + "..."
     }
 }
 
