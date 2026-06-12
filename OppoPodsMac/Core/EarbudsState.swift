@@ -3,7 +3,9 @@ import Foundation
 enum ConnectionStatus: String, Equatable {
     case disconnected = "Disconnected"
     case connecting = "Connecting"
+    case handshaking = "Handshaking"
     case connected = "Connected"
+    case reconnecting = "Reconnecting"
     case error = "Error"
     case handshakeFailed = "Handshake Failed"
 
@@ -13,8 +15,12 @@ enum ConnectionStatus: String, Equatable {
             return "未连接"
         case .connecting:
             return "连接中"
+        case .handshaking:
+            return "握手中"
         case .connected:
             return "已连接"
+        case .reconnecting:
+            return "重连中"
         case .error:
             return "连接失败"
         case .handshakeFailed:

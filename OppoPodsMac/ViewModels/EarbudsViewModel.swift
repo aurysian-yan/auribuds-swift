@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 @MainActor
@@ -10,6 +11,7 @@ final class EarbudsViewModel: ObservableObject {
     private let protocolClient = OppoProtocol()
     private var hasStarted = false
     private var autoRefreshTask: Task<Void, Never>?
+    private var terminationObserver: NSObjectProtocol?
 
     var ancMode: ANCMode {
         state.ancMode
@@ -24,6 +26,24 @@ final class EarbudsViewModel: ObservableObject {
             Task { @MainActor in
                 self?.appendDebugEvent(event)
             }
+        }
+
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.stopAutoRefresh()
+                await self.protocolClient.disconnect()
+            }
+        }
+    }
+
+    deinit {
+        if let terminationObserver {
+            NotificationCenter.default.removeObserver(terminationObserver)
         }
     }
 
@@ -53,9 +73,7 @@ final class EarbudsViewModel: ObservableObject {
         appendDebugEvent("reconnect")
 
         let client = protocolClient
-        await Task.detached {
-            client.disconnect()
-        }.value
+        await client.disconnect()
 
         await connect(isAutomatic: false)
     }
@@ -71,11 +89,10 @@ final class EarbudsViewModel: ObservableObject {
         isBusy = true
 
         let client = protocolClient
+        let deviceName = state.deviceName
 
         do {
-            let battery = try await Task.detached {
-                try client.refreshBattery()
-            }.value
+            let battery = try await client.refreshBattery(deviceName: deviceName)
             state.battery = battery
             state.connectionStatus = .connected
         } catch let error as OppoProtocolError where error == .batteryDecodeFailed {
@@ -94,20 +111,18 @@ final class EarbudsViewModel: ObservableObject {
 
     func setANC(_ mode: ANCMode) async {
         guard !isBusy else { return }
-        guard state.connectionStatus == .connected else {
-            appendDebugEvent("error Handshake Failed")
-            return
-        }
 
         isBusy = true
         isWritingANC = true
+        state.lastError = nil
         let client = protocolClient
+        let deviceName = state.deviceName
 
         do {
-            try await Task.detached {
-                try client.setANC(mode)
-            }.value
+            try await client.setANC(mode, deviceName: deviceName)
             state.ancMode = mode
+            state.connectionStatus = .connected
+            startAutoRefresh()
         } catch let error as OppoProtocolError where error == .handshakeFailed {
             state.connectionStatus = .handshakeFailed
             state.lastError = error.localizedDescription
@@ -146,9 +161,7 @@ final class EarbudsViewModel: ObservableObject {
         let deviceName = state.deviceName
 
         do {
-            let battery = try await Task.detached {
-                try client.connect(deviceName: deviceName)
-            }.value
+            let battery = try await client.connect(deviceName: deviceName)
 
             state.battery = battery
             state.connectionStatus = .connected

@@ -18,17 +18,27 @@ final class BluetoothClassicTransport {
     private let closeTimeout: TimeInterval = 3
     private let retryDelay: TimeInterval = 2
     private let maxAttempts = 3
+    private var cachedDevice: IOBluetoothDevice?
+    private var cachedDeviceName: String?
 
     func pairedDevices() -> [IOBluetoothDevice] {
         (IOBluetoothDevice.pairedDevices() ?? []).compactMap { $0 as? IOBluetoothDevice }
     }
 
     func findDevice(named targetName: String) throws -> IOBluetoothDevice {
+        if let cachedDevice,
+           let cachedDeviceName,
+           normalize(cachedDeviceName) == normalize(targetName) {
+            return cachedDevice
+        }
+
         let normalizedTarget = normalize(targetName)
         if let device = pairedDevices().first(where: { device in
             normalize(device.name ?? "").contains(normalizedTarget)
                 || normalize(device.addressString ?? "").contains(normalizedTarget)
         }) {
+            cachedDevice = device
+            cachedDeviceName = targetName
             return device
         }
 

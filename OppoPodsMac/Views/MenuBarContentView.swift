@@ -91,7 +91,7 @@ struct MenuBarContentView: View {
         switch viewModel.state.connectionStatus {
         case .connected:
             return .green
-        case .connecting:
+        case .connecting, .handshaking, .reconnecting:
             return .secondary
         case .error, .handshakeFailed:
             return .red

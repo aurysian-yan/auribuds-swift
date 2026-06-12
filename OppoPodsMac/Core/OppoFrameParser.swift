@@ -43,6 +43,10 @@ enum OppoFrameParser {
         return false
     }
 
+    static func isANCResponse(_ data: Data) -> Bool {
+        isANCCandidateFrame(data)
+    }
+
     private static func parseBatteryFields(in bytes: [UInt8], after startIndex: Int) -> (left: UInt8, right: UInt8, batteryCase: UInt8)? {
         guard startIndex <= bytes.count - 7 else { return nil }
 

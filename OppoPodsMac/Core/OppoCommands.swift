@@ -4,9 +4,45 @@ struct OppoCommand {
     let name: String
     let sources: [String]
     let bytes: [UInt8]
+    let expectedResponse: OppoResponseMatcher
+    let timeout: TimeInterval
+    let retryCount: Int
+
+    init(
+        name: String,
+        sources: [String],
+        bytes: [UInt8],
+        expectedResponse: OppoResponseMatcher = .none,
+        timeout: TimeInterval = 1,
+        retryCount: Int = 0
+    ) {
+        self.name = name
+        self.sources = sources
+        self.bytes = bytes
+        self.expectedResponse = expectedResponse
+        self.timeout = timeout
+        self.retryCount = retryCount
+    }
 
     var hexString: String {
         bytes.hexString
+    }
+}
+
+enum OppoResponseMatcher: Equatable {
+    case none
+    case battery
+    case anc
+
+    func matches(_ data: Data) -> Bool {
+        switch self {
+        case .none:
+            return true
+        case .battery:
+            return OppoFrameParser.isBatteryResponse(data)
+        case .anc:
+            return OppoFrameParser.isANCResponse(data)
+        }
     }
 }
 
@@ -16,7 +52,8 @@ enum OppoCommands {
         sources: [
             "Packets.kt lines 211-214"
         ],
-        bytes: [0xAA, 0x09, 0x00, 0x00, 0x05, 0x02, 0x3A, 0x02, 0x00, 0x01, 0x02]
+        bytes: [0xAA, 0x09, 0x00, 0x00, 0x05, 0x02, 0x3A, 0x02, 0x00, 0x01, 0x02],
+        timeout: 0.2
     )
 
     static let batteryQuery = OppoCommand(
@@ -26,7 +63,10 @@ enum OppoCommands {
             "RfcommController.kt lines 981-984",
             "RfcommController.kt lines 996-1002"
         ],
-        bytes: [0xAA, 0x07, 0x00, 0x00, 0x06, 0x01, 0xF0, 0x00, 0x00]
+        bytes: [0xAA, 0x07, 0x00, 0x00, 0x06, 0x01, 0xF0, 0x00, 0x00],
+        expectedResponse: .battery,
+        timeout: 2,
+        retryCount: 1
     )
 
     static let queryANC = OppoCommand(
@@ -36,7 +76,9 @@ enum OppoCommands {
             "Packets.kt lines 216-219",
             "RfcommController.kt lines 996-1002"
         ],
-        bytes: buildPacket(command: 0x010C, payload: [0x01, 0x01])
+        bytes: buildPacket(command: 0x010C, payload: [0x01, 0x01]),
+        expectedResponse: .anc,
+        timeout: 1
     )
 
     static let setTransparency = OppoCommand(
@@ -46,7 +88,9 @@ enum OppoCommands {
             "Packets.kt lines 177-180",
             "RfcommController.kt lines 959-975"
         ],
-        bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x04])
+        bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x04]),
+        expectedResponse: .anc,
+        timeout: 0.8
     )
 
     static let setANCOff = OppoCommand(
@@ -56,7 +100,9 @@ enum OppoCommands {
             "Packets.kt lines 196-199",
             "RfcommController.kt lines 959-975"
         ],
-        bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x01])
+        bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x01]),
+        expectedResponse: .anc,
+        timeout: 0.8
     )
 
     private static func buildPacket(command: UInt16, sequence: UInt8 = 0xF0, payload: [UInt8] = []) -> [UInt8] {

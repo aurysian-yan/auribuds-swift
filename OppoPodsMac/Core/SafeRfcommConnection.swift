@@ -31,6 +31,13 @@ enum SafeRfcommError: Error, LocalizedError {
     }
 }
 
+enum TransportState: Equatable {
+    case closed
+    case opening
+    case open
+    case closing
+}
+
 final class SafeRfcommDelegate: NSObject {
     var channel: IOBluetoothRFCOMMChannel?
     private(set) var openStatus: IOReturn?
@@ -99,9 +106,14 @@ final class SafeRfcommConnection {
     private let channel: IOBluetoothRFCOMMChannel
     private let delegate: SafeRfcommDelegate
     private let closeTimeout: TimeInterval
+    private(set) var state: TransportState = .open
 
     var responseCount: Int {
         delegate.responseCount
+    }
+
+    var isOpen: Bool {
+        state == .open && !delegate.didClose
     }
 
     init(channel: IOBluetoothRFCOMMChannel, delegate: SafeRfcommDelegate, closeTimeout: TimeInterval) {
@@ -154,6 +166,10 @@ final class SafeRfcommConnection {
     }
 
     func write(_ bytes: [UInt8]) throws {
+        guard isOpen else {
+            throw SafeRfcommError.notConnected
+        }
+
         var mutableBytes = bytes
         let status = mutableBytes.withUnsafeMutableBytes { buffer in
             channel.writeSync(buffer.baseAddress, length: UInt16(buffer.count))
@@ -162,14 +178,37 @@ final class SafeRfcommConnection {
         delegate.onEvent?("write complete \(SafeRfcommError.formatIOReturn(status))")
 
         guard status == kIOReturnSuccess else {
+            state = .closed
             throw SafeRfcommError.writeFailed(status)
         }
+    }
+
+    func waitForMatchingResponses(
+        since baseline: Int,
+        timeout: TimeInterval,
+        matcher: OppoResponseMatcher
+    ) -> [Data] {
+        guard matcher != .none else { return [] }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        var collected: [Data] = []
+
+        while isOpen && Date() < deadline {
+            collected = delegate.responsesSince(baseline)
+            if collected.contains(where: { matcher.matches($0) }) {
+                return collected
+            }
+
+            RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.02))
+        }
+
+        return delegate.responsesSince(baseline)
     }
 
     func waitForResponses(since baseline: Int, timeout: TimeInterval) -> [Data] {
         let deadline = Date().addingTimeInterval(timeout)
 
-        while !delegate.didClose && Date() < deadline {
+        while isOpen && Date() < deadline {
             RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.05))
         }
 
@@ -177,6 +216,8 @@ final class SafeRfcommConnection {
     }
 
     func close() {
+        guard state != .closed else { return }
+        state = .closing
         delegate.resetAfterFailure()
         delegate.channel = channel
         delegate.onEvent?("close request")
@@ -192,6 +233,7 @@ final class SafeRfcommConnection {
         } else {
             delegate.onEvent?("channel closed timeout")
         }
+        state = .closed
     }
 
     private static func openChannel(
