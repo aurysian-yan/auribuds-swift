@@ -4,7 +4,7 @@
 
 # OPPOPods
 
-**一个轻量级的 OPPO 耳机控制小工具**
+**一个用于 macOS 的原生轻量级 OPPO 耳机控制小工具**
 
 逻辑基于[1812z/OppoPods](https://github.com/1812z/OppoPods)
 
