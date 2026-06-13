@@ -12,9 +12,9 @@ enum OppoFrameParser {
 
             if let fields = parseBatteryFields(in: bytes, after: commandIndex + 3) {
                 return BatteryState(
-                    left: normalizedBatteryValue(fields.left),
-                    right: normalizedBatteryValue(fields.right),
-                    batteryCase: normalizedBatteryValue(fields.batteryCase)
+                    left: fields.left,
+                    right: fields.right,
+                    batteryCase: fields.batteryCase
                 )
             }
 
@@ -110,11 +110,6 @@ enum OppoFrameParser {
         }
 
         return nil
-    }
-
-    private static func normalizedBatteryValue(_ value: UInt8) -> UInt8? {
-        guard value != 0x00 && value != 0xFF else { return nil }
-        return value
     }
 
     private static func containsANCModePayload(_ modeValue: UInt8, in bytes: [UInt8], from startIndex: Int) -> Bool {

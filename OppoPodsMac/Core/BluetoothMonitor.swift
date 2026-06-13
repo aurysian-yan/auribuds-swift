@@ -6,6 +6,7 @@ final class BluetoothMonitor: NSObject, ObservableObject {
 
     @Published private(set) var lastConnectedDevice: BluetoothDeviceSnapshot?
     @Published private(set) var lastDisconnectedDevice: BluetoothDeviceSnapshot?
+    @Published private(set) var availableDevices: [BluetoothDeviceSnapshot] = []
 
     private var connectNotification: IOBluetoothUserNotification?
     private var disconnectNotifications: [String: IOBluetoothUserNotification] = [:]
@@ -24,7 +25,7 @@ final class BluetoothMonitor: NSObject, ObservableObject {
             selector: #selector(handleDeviceConnected(_:device:))
         )
 
-        registerDisconnectNotificationsForPairedDevices()
+        refreshAvailableDevices()
     }
 
     func stop() {
@@ -41,6 +42,7 @@ final class BluetoothMonitor: NSObject, ObservableObject {
 
     @objc private func handleDeviceConnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
         registerDisconnectNotification(for: device)
+        refreshAvailableDevices()
         publishConnectedSnapshot(for: device)
     }
 
@@ -48,14 +50,25 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         let address = normalizedAddress(device.addressString)
         disconnectNotifications[address]?.unregister()
         disconnectNotifications.removeValue(forKey: address)
+        refreshAvailableDevices()
         publishDisconnectedSnapshot(for: device)
     }
 
-    private func registerDisconnectNotificationsForPairedDevices() {
+    func refreshAvailableDevices() {
         let devices = (IOBluetoothDevice.pairedDevices() ?? []).compactMap { $0 as? IOBluetoothDevice }
 
         for device in devices {
             registerDisconnectNotification(for: device)
+        }
+
+        let snapshots = devices
+            .map { snapshot(for: $0, isConnected: $0.isConnected()) }
+            .sorted { first, second in
+                first.name.localizedStandardCompare(second.name) == .orderedAscending
+            }
+
+        DispatchQueue.main.async { [weak self] in
+            self?.availableDevices = snapshots
         }
     }
 
@@ -92,7 +105,9 @@ final class BluetoothMonitor: NSObject, ObservableObject {
             name: device.nameOrAddress ?? device.name ?? device.addressString ?? "Bluetooth Device",
             address: normalizedAddress(device.addressString),
             isConnected: isConnected,
-            timestamp: Date()
+            timestamp: Date(),
+            majorDeviceClass: UInt32(device.deviceClassMajor),
+            minorDeviceClass: UInt32(device.deviceClassMinor)
         )
     }
 

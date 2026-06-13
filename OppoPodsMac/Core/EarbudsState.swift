@@ -33,6 +33,7 @@ struct EarbudsState: Equatable {
     var deviceName = "OPPO Enco Air4 Pro"
     var deviceAddress: String?
     var currentDevice: BluetoothDeviceSnapshot?
+    var availableDevices: [BluetoothDeviceSnapshot] = []
     var systemBluetoothConnected = false
     var appConnected = false
     var connectionStatus: ConnectionStatus = .disconnected

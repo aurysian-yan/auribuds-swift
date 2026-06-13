@@ -13,10 +13,10 @@ struct MenuBarContentView: View {
             return .green
 
         case .disconnected:
-            return .red
+            return .secondary
 
         case .connecting, .handshaking, .reconnecting:
-            return .white
+            return .accentColor
 
         case .error, .handshakeFailed:
             return .yellow
@@ -90,19 +90,13 @@ struct MenuBarContentView: View {
                 }
 
                 BatteryRowView(value: viewModel.state.battery.text(for: .batteryCase)) {
-                    Image("oppobuds.case.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 16, height: 16)
-                        .accessibilityLabel("Case")
+                    BatteryCaseChargingIcon(isCharging: viewModel.state.battery.isCharging(.batteryCase))
                 }
             }
             GeometryReader { geometry in
                 DeviceImageView(
                     imageName: DeviceImageProvider.shared.primaryImageName(for: viewModel.state),
-                    fallbackSystemName: "headphones"
+                    fallbackSystemName: viewModel.state.currentDevice?.fallbackSystemName ?? "headphones"
                 )
                 .frame(width: geometry.size.width, height: geometry.size.width)
                 .scaleEffect(1)

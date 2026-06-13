@@ -173,9 +173,9 @@ struct DeviceOverviewContent: View {
         case .connected:
             return .green
         case .disconnected:
-            return .red
+            return .secondary
         case .connecting, .handshaking, .reconnecting:
-            return .white
+            return .accentColor
         case .error, .handshakeFailed:
             return .yellow
         }
@@ -233,20 +233,14 @@ struct DeviceOverviewContent: View {
                 }
 
                 BatteryRowView(value: viewModel.state.battery.text(for: .batteryCase)) {
-                    Image("oppobuds.case.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 16, height: 16)
-                        .accessibilityLabel("Case")
+                    BatteryCaseChargingIcon(isCharging: viewModel.state.battery.isCharging(.batteryCase))
                 }
             }
 
             GeometryReader { geometry in
                 DeviceImageView(
                     imageName: DeviceImageProvider.shared.primaryImageName(for: viewModel.state),
-                    fallbackSystemName: "headphones"
+                    fallbackSystemName: viewModel.state.currentDevice?.fallbackSystemName ?? "headphones"
                 )
                 .frame(width: geometry.size.width, height: geometry.size.width)
                 .position(x: geometry.size.width / 2, y: geometry.size.width / 2)
@@ -273,7 +267,7 @@ private struct DevicesSidebarView: View {
     let errorLogCount: Int
 
     private var devices: [PairedDevice] {
-        [PairedDevice(state: viewModel.state)]
+        viewModel.pairedDevices
     }
 
     var body: some View {
@@ -282,7 +276,7 @@ private struct DevicesSidebarView: View {
                 ForEach(devices) { device in
                     DeviceSidebarRow(
                         device: device,
-                        connectionStatus: viewModel.state.connectionStatus,
+                        connectionStatus: connectionStatus(for: device),
                         isSelected: currentPage == .device(device.id)
                     ) {
                         select(.device(device.id))
@@ -323,6 +317,18 @@ private struct DevicesSidebarView: View {
         withAnimation(.snappy(duration: 0.24)) {
             currentPage = page
         }
+    }
+
+    private func connectionStatus(for device: PairedDevice) -> ConnectionStatus {
+        guard device.isAppControllable else {
+            return .disconnected
+        }
+
+        if device.id == PairedDevice(state: viewModel.state).id {
+            return viewModel.state.connectionStatus
+        }
+
+        return .disconnected
     }
 }
 
@@ -384,15 +390,15 @@ private struct DeviceSidebarRow: View {
     @State private var blinkStatusDot = false
 
     private var statusDotColor: Color {
-        switch viewModel.state.connectionStatus {
+        switch connectionStatus {
         case .connected:
             return .green
 
         case .disconnected:
-            return .red
+            return .secondary
 
         case .connecting, .handshaking, .reconnecting:
-            return .white
+            return .accentColor
 
         case .error, .handshakeFailed:
             return .yellow
@@ -400,12 +406,16 @@ private struct DeviceSidebarRow: View {
     }
 
     private var shouldBlinkStatusDot: Bool {
-        switch viewModel.state.connectionStatus {
+        switch connectionStatus {
         case .connecting, .handshaking, .reconnecting:
             return true
         default:
             return false
         }
+    }
+
+    private var statusTitle: String {
+        device.isAppControllable ? connectionStatus.localizedTitle : "不可连接"
     }
 
     init(
@@ -420,81 +430,97 @@ private struct DeviceSidebarRow: View {
         self.action = action
     }
 
+    @ViewBuilder
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                HStack(){
-                    DeviceImageView(
-                        imageName: imageName,
-                        fallbackSystemName: "headphones",
-                        size: CGSize(width: 56, height: 56)
-                    )
+        if device.isAppControllable {
+            Button(action: action) {
+                rowContent
+            }
+            .buttonStyle(.plain)
+            .contextMenu {
+                Button("刷新电量") {
+                    Task {
+                        await viewModel.refreshBattery()
+                    }
                 }
-                .frame(width: 50, height: 50)
+                .disabled(!canRefreshBattery)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(device.displayName)
-                        .font(.system(size: 15))
-                        .lineLimit(2)
+                Button("重连") {
+                    Task {
+                        await viewModel.connect(device: device)
+                    }
+                }
+                .disabled(viewModel.isBusy)
+
+                Button("连接") {
+                    Task {
+                        await viewModel.connect(device: device)
+                    }
+                }
+                .disabled(!canConnect)
+            }
+        } else {
+            rowContent
+        }
+    }
+
+    private var rowContent: some View {
+        HStack(spacing: 10) {
+            HStack(){
+                DeviceImageView(
+                    imageName: imageName,
+                    fallbackSystemName: device.fallbackSystemName,
+                    size: CGSize(width: 56, height: 56)
+                )
+            }
+            .frame(width: 50, height: 50)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(device.displayName)
+                    .font(.system(size: 15))
+                    .lineLimit(2)
+                
+                HStack(spacing: 6) {
+                    statusDot
                     
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(statusDotColor)
-                            .frame(width: 6, height: 6)
-                            .opacity(shouldBlinkStatusDot ? (blinkStatusDot ? 0.25 : 1.0) : 1.0)
-                            .onAppear {
-                                blinkStatusDot = false
-                                
-                                if shouldBlinkStatusDot {
-                                    withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
-                                        blinkStatusDot = true
-                                    }
-                                }
-                            }
-                            .onChange(of: shouldBlinkStatusDot) { _, isBlinking in
-                                blinkStatusDot = false
-                                
-                                if isBlinking {
-                                    withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
-                                        blinkStatusDot = true
-                                    }
-                                }
-                            }
-                        
-                        Text(connectionStatus.localizedTitle)
-                            .font(.caption)
-                            .foregroundStyle(connectionStatus == .connected ? .green : .secondary)
+                    Text(statusTitle)
+                        .font(.caption)
+                        .foregroundStyle(connectionStatus == .connected ? .green : .secondary)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(selectionBackground, in: RoundedRectangle(cornerRadius: 12))
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private var statusDot: some View {
+        Circle()
+            .fill(statusDotColor)
+            .frame(width: 6, height: 6)
+            .opacity(shouldBlinkStatusDot ? (blinkStatusDot ? 0.25 : 1.0) : 1.0)
+            .onAppear {
+                blinkStatusDot = false
+                
+                if shouldBlinkStatusDot {
+                    withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+                        blinkStatusDot = true
                     }
                 }
             }
-            .padding(4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(selectionBackground, in: RoundedRectangle(cornerRadius: 12))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button("刷新电量") {
-                Task {
-                    await viewModel.refreshBattery()
+            .onChange(of: shouldBlinkStatusDot) { _, isBlinking in
+                blinkStatusDot = false
+                
+                if isBlinking {
+                    withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+                        blinkStatusDot = true
+                    }
                 }
             }
-            .disabled(!canRefreshBattery)
-
-            Button("重连") {
-                Task {
-                    await viewModel.reconnect()
-                }
-            }
-            .disabled(viewModel.isBusy)
-
-            Button("连接") {
-                Task {
-                    await viewModel.connect()
-                }
-            }
-            .disabled(!canConnect)
-        }
     }
 
     private var selectionBackground: Color {
@@ -502,17 +528,20 @@ private struct DeviceSidebarRow: View {
     }
 
     private var canRefreshBattery: Bool {
-        viewModel.state.connectionStatus == .connected && !viewModel.isBusy
+        device.id == PairedDevice(state: viewModel.state).id &&
+            viewModel.state.connectionStatus == .connected &&
+            !viewModel.isBusy
     }
 
     private var canConnect: Bool {
         guard !viewModel.isBusy else { return false }
+        guard device.isAppControllable else { return false }
 
         switch viewModel.state.connectionStatus {
         case .disconnected, .error, .handshakeFailed:
             return true
         case .connected, .connecting, .handshaking, .reconnecting:
-            return false
+            return device.id != PairedDevice(state: viewModel.state).id
         }
     }
 }
@@ -596,7 +625,7 @@ private struct SettingsPageView: View {
     @ObservedObject var viewModel: EarbudsViewModel
 
     private var devices: [PairedDevice] {
-        [PairedDevice(state: viewModel.state)]
+        viewModel.pairedDevices
     }
 
     var body: some View {
@@ -631,7 +660,7 @@ private struct DeviceSettingsRow: View {
             HStack(spacing: 12) {
                 DeviceImageView(
                     imageName: selectedImageName.isEmpty ? device.defaultImageName : selectedImageName,
-                    fallbackSystemName: "headphones",
+                    fallbackSystemName: device.fallbackSystemName,
                     size: CGSize(width: 44, height: 44)
                 )
 

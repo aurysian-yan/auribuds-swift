@@ -54,6 +54,10 @@ final class OppoProtocol {
         try await backend.connect(deviceName: deviceName)
     }
 
+    func connect(device: BluetoothDeviceSnapshot) async throws -> BatteryState {
+        try await backend.connect(device: device)
+    }
+
     func disconnect() async {
         await backend.disconnect()
     }
@@ -62,12 +66,24 @@ final class OppoProtocol {
         try await backend.refreshBattery(deviceName: deviceName)
     }
 
+    func refreshBattery(device: BluetoothDeviceSnapshot) async throws -> BatteryState {
+        try await backend.refreshBattery(device: device)
+    }
+
     func refreshANC(deviceName: String) async throws -> ANCMode {
         try await backend.refreshANC(deviceName: deviceName)
     }
 
+    func refreshANC(device: BluetoothDeviceSnapshot) async throws -> ANCMode {
+        try await backend.refreshANC(device: device)
+    }
+
     func setANC(_ mode: ANCMode, deviceName: String) async throws {
         try await backend.setANC(mode, deviceName: deviceName)
+    }
+
+    func setANC(_ mode: ANCMode, device: BluetoothDeviceSnapshot) async throws {
+        try await backend.setANC(mode, device: device)
     }
 }
 
@@ -78,6 +94,8 @@ actor OppoProtocolBackend {
     private var connectionState: ConnectionState = .disconnected
     private var connectTask: Task<Void, Error>?
     private var activeDeviceName: String?
+    private var activeDevice: BluetoothDeviceSnapshot?
+    private var connectedDeviceID: String?
     private var latestBattery = BatteryState.unknown
     private var hasSafeHandshakePassed = false
     private var hasBatteryResponse = false
@@ -100,12 +118,26 @@ actor OppoProtocolBackend {
         return latestBattery
     }
 
+    func connect(device: BluetoothDeviceSnapshot) async throws -> BatteryState {
+        activeDevice = device
+        activeDeviceName = device.name
+        try await connectIfNeeded(device: device)
+
+        if latestBattery == .unknown {
+            latestBattery = try await requestBattery()
+        }
+
+        return latestBattery
+    }
+
     func disconnect() {
         connectTask?.cancel()
         connectTask = nil
         closeConnection()
         latestBattery = .unknown
         activeDeviceName = nil
+        activeDevice = nil
+        connectedDeviceID = nil
         connectionState = .disconnected
         isRefreshingBattery = false
         inFlightCommandName = nil
@@ -133,9 +165,60 @@ actor OppoProtocolBackend {
         }
     }
 
+    func refreshBattery(device: BluetoothDeviceSnapshot) async throws -> BatteryState {
+        activeDevice = device
+        activeDeviceName = device.name
+        try await connectIfNeeded(device: device)
+        isRefreshingBattery = true
+        defer { isRefreshingBattery = false }
+
+        do {
+            let battery = try await requestBattery()
+            latestBattery = battery
+            return battery
+        } catch {
+            if isStaleConnectionError(error) {
+                try await reconnect(device: device)
+                let battery = try await requestBattery()
+                latestBattery = battery
+                return battery
+            }
+
+            throw error
+        }
+    }
+
     func setANC(_ mode: ANCMode, deviceName: String) async throws {
         activeDeviceName = deviceName
         try await connectIfNeeded(deviceName: deviceName)
+
+        let command: OppoCommand
+        switch mode {
+        case .off:
+            command = OppoCommands.setANCOff
+        case .transparency:
+            command = OppoCommands.setTransparency
+        case .noiseCancellation:
+            command = OppoCommands.setNoiseCancellation
+        }
+
+        if mode == .noiseCancellation {
+            try validateNoiseCancellationGate()
+        }
+
+        let startedAt = Date()
+        try await send(command)
+
+        if mode == .noiseCancellation {
+            let elapsed = Date().timeIntervalSince(startedAt)
+            emit(String(format: "setANC(noiseCancellation) completed in %.3fs", elapsed))
+        }
+    }
+
+    func setANC(_ mode: ANCMode, device: BluetoothDeviceSnapshot) async throws {
+        activeDevice = device
+        activeDeviceName = device.name
+        try await connectIfNeeded(device: device)
 
         let command: OppoCommand
         switch mode {
@@ -174,6 +257,21 @@ actor OppoProtocolBackend {
         throw OppoProtocolError.commandTimeout(OppoCommands.queryANC.name)
     }
 
+    func refreshANC(device: BluetoothDeviceSnapshot) async throws -> ANCMode {
+        activeDevice = device
+        activeDeviceName = device.name
+        try await connectIfNeeded(device: device)
+
+        let responses = try await send(OppoCommands.queryANC)
+        for frame in responses {
+            if let mode = OppoFrameParser.decodeANCMode(from: frame) {
+                return mode
+            }
+        }
+
+        throw OppoProtocolError.commandTimeout(OppoCommands.queryANC.name)
+    }
+
     private func connectIfNeeded(deviceName: String) async throws {
         if let connection, connection.isOpen {
             connectionState = .connected
@@ -199,11 +297,47 @@ actor OppoProtocolBackend {
         }
     }
 
+    private func connectIfNeeded(device: BluetoothDeviceSnapshot) async throws {
+        if let connection, connection.isOpen, connectedDeviceID == device.id {
+            connectionState = .connected
+            return
+        }
+
+        if let connection, connection.isOpen, connectedDeviceID != device.id {
+            closeConnection()
+        }
+
+        if let connectTask {
+            try await connectTask.value
+            return
+        }
+
+        let task = Task {
+            try await self.establishConnection(device: device)
+        }
+        connectTask = task
+
+        do {
+            try await task.value
+            connectTask = nil
+        } catch {
+            connectTask = nil
+            throw error
+        }
+    }
+
     private func reconnect(deviceName: String) async throws {
         emit("reconnect")
         connectionState = .reconnecting
         closeConnection()
         try await connectIfNeeded(deviceName: deviceName)
+    }
+
+    private func reconnect(device: BluetoothDeviceSnapshot) async throws {
+        emit("reconnect")
+        connectionState = .reconnecting
+        closeConnection()
+        try await connectIfNeeded(device: device)
     }
 
     private func establishConnection(deviceName: String) async throws {
@@ -233,12 +367,45 @@ actor OppoProtocolBackend {
         }
     }
 
+    private func establishConnection(device: BluetoothDeviceSnapshot) async throws {
+        closeConnection()
+        connectionState = .connecting
+        hasSafeHandshakePassed = false
+        hasBatteryResponse = false
+
+        do {
+            let connection = try transport.connect(device: device) { [weak self] event in
+                Task {
+                    await self?.emit(event)
+                }
+            }
+
+            self.connection = connection
+            activeDevice = device
+            activeDeviceName = device.name
+            connectedDeviceID = device.id
+            connectionState = .handshaking
+            try await send(OppoCommands.enableStatusPush)
+            latestBattery = try await requestBattery()
+            connectionState = .connected
+            hasSafeHandshakePassed = true
+            emit("safe handshake passed")
+        } catch {
+            closeConnection()
+            connectionState = .error(error.localizedDescription)
+            throw error
+        }
+    }
+
     private func requestBattery() async throws -> BatteryState {
         let responses = try await send(OppoCommands.batteryQuery)
 
         for frame in responses {
             if let battery = OppoFrameParser.decodeBattery(from: frame) {
                 hasBatteryResponse = true
+                emit("battery \(battery.debugDescription(for: .left))")
+                emit("battery \(battery.debugDescription(for: .right))")
+                emit("battery \(battery.debugDescription(for: .batteryCase))")
                 return battery
             }
         }
@@ -278,6 +445,7 @@ actor OppoProtocolBackend {
     private func closeConnection() {
         connection?.close()
         connection = nil
+        connectedDeviceID = nil
         hasSafeHandshakePassed = false
         hasBatteryResponse = false
     }

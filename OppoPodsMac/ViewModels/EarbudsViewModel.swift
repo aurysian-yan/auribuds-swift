@@ -27,6 +27,28 @@ final class EarbudsViewModel: ObservableObject {
         debugEvents.last
     }
 
+    var pairedDevices: [PairedDevice] {
+        var snapshots = state.availableDevices
+
+        if let currentDevice = state.currentDevice,
+           !snapshots.contains(where: { $0.id == currentDevice.id }) {
+            snapshots.insert(currentDevice, at: 0)
+        }
+
+        let devices = snapshots.map { snapshot in
+            PairedDevice(
+                snapshot: snapshot,
+                isAppControllable: isTargetDevice(snapshot)
+            )
+        }
+
+        if devices.isEmpty {
+            return [PairedDevice(state: state)]
+        }
+
+        return devices
+    }
+
     init() {
         knownDeviceAddresses = Set(UserDefaults.standard.stringArray(forKey: knownDeviceAddressesKey) ?? [])
 
@@ -75,6 +97,18 @@ final class EarbudsViewModel: ObservableObject {
         await connect(isAutomatic: false)
     }
 
+    func connect(device: PairedDevice) async {
+        guard device.isAppControllable else { return }
+
+        guard let snapshot = device.snapshot else {
+            await connect(isAutomatic: false)
+            return
+        }
+
+        stopBackgroundTasks()
+        await connect(isAutomatic: false, snapshot: snapshot)
+    }
+
     func reconnect() async {
         guard !isBusy else { return }
         stopBackgroundTasks()
@@ -98,13 +132,21 @@ final class EarbudsViewModel: ObservableObject {
         guard !isBusy else { return }
         guard force || state.connectionStatus == .connected else { return }
         guard !isWritingANC else { return }
+        if let currentDevice = state.currentDevice, !isTargetDevice(currentDevice) {
+            return
+        }
         isBusy = true
 
         let client = protocolClient
-        let deviceName = state.deviceName
+        let currentDevice = state.currentDevice
 
         do {
-            let battery = try await client.refreshBattery(deviceName: deviceName)
+            let battery: BatteryState
+            if let currentDevice {
+                battery = try await client.refreshBattery(device: currentDevice)
+            } else {
+                battery = try await client.refreshBattery(deviceName: state.deviceName)
+            }
             state.battery = battery
             state.connectionStatus = .connected
             state.appConnected = true
@@ -127,15 +169,22 @@ final class EarbudsViewModel: ObservableObject {
 
     func setANC(_ mode: ANCMode) async {
         guard !isBusy else { return }
+        if let currentDevice = state.currentDevice, !isTargetDevice(currentDevice) {
+            return
+        }
 
         isBusy = true
         isWritingANC = true
         state.lastError = nil
         let client = protocolClient
-        let deviceName = state.deviceName
+        let currentDevice = state.currentDevice
 
         do {
-            try await client.setANC(mode, deviceName: deviceName)
+            if let currentDevice {
+                try await client.setANC(mode, device: currentDevice)
+            } else {
+                try await client.setANC(mode, deviceName: state.deviceName)
+            }
             state.ancMode = mode
             state.connectionStatus = .connected
             state.appConnected = true
@@ -168,6 +217,13 @@ final class EarbudsViewModel: ObservableObject {
     }
 
     private func subscribeToBluetoothMonitor() {
+        BluetoothMonitor.shared.$availableDevices
+            .receive(on: RunLoop.main)
+            .sink { [weak self] snapshots in
+                self?.state.availableDevices = snapshots
+            }
+            .store(in: &cancellables)
+
         BluetoothMonitor.shared.$lastConnectedDevice
             .compactMap { $0 }
             .receive(on: RunLoop.main)
@@ -227,6 +283,22 @@ final class EarbudsViewModel: ObservableObject {
 
     private func connect(isAutomatic: Bool, snapshot: BluetoothDeviceSnapshot? = nil) async {
         guard !isBusy else { return }
+
+        if let snapshot, !isTargetDevice(snapshot) {
+            return
+        }
+
+        if let snapshot,
+           state.connectionStatus == .connected,
+           state.currentDevice?.id != snapshot.id {
+            let client = protocolClient
+            await client.disconnect()
+            state.connectionStatus = .disconnected
+            state.appConnected = false
+            state.battery = .unknown
+            state.ancMode = .off
+        }
+
         guard state.connectionStatus != .connecting && state.connectionStatus != .connected else { return }
 
         isBusy = true
@@ -242,10 +314,15 @@ final class EarbudsViewModel: ObservableObject {
         appendDebugEvent(isAutomatic ? "auto connect attempt" : "connect attempt")
 
         let client = protocolClient
-        let deviceName = state.deviceName
+        let currentDevice = state.currentDevice
 
         do {
-            let battery = try await client.connect(deviceName: deviceName)
+            let battery: BatteryState
+            if let currentDevice {
+                battery = try await client.connect(device: currentDevice)
+            } else {
+                battery = try await client.connect(deviceName: state.deviceName)
+            }
 
             state.battery = battery
             state.connectionStatus = .connected
@@ -255,7 +332,7 @@ final class EarbudsViewModel: ObservableObject {
             if let snapshot {
                 rememberDeviceAddress(snapshot.address)
             }
-            await refreshANCStatusAfterConnect(deviceName: deviceName)
+            await refreshANCStatusAfterConnect(device: currentDevice)
             appendDebugEvent(isAutomatic ? "Auto connect passed" : "connect passed")
             startAutoRefresh()
         } catch let error as OppoProtocolError where error == .batteryDecodeFailed || error == .handshakeFailed {
@@ -274,9 +351,17 @@ final class EarbudsViewModel: ObservableObject {
         isBusy = false
     }
 
-    private func refreshANCStatusAfterConnect(deviceName: String) async {
+    private func refreshANCStatusAfterConnect(device: BluetoothDeviceSnapshot?) async {
+        if let device, !isTargetDevice(device) {
+            return
+        }
+
         do {
-            state.ancMode = try await protocolClient.refreshANC(deviceName: deviceName)
+            if let device {
+                state.ancMode = try await protocolClient.refreshANC(device: device)
+            } else {
+                state.ancMode = try await protocolClient.refreshANC(deviceName: state.deviceName)
+            }
         } catch {
             appendDebugEvent("error \(error.localizedDescription)")
         }
@@ -286,9 +371,16 @@ final class EarbudsViewModel: ObservableObject {
         guard !isBusy else { return }
         guard state.connectionStatus == .connected else { return }
         guard !isWritingANC else { return }
+        if let currentDevice = state.currentDevice, !isTargetDevice(currentDevice) {
+            return
+        }
 
         do {
-            state.ancMode = try await protocolClient.refreshANC(deviceName: state.deviceName)
+            if let currentDevice = state.currentDevice {
+                state.ancMode = try await protocolClient.refreshANC(device: currentDevice)
+            } else {
+                state.ancMode = try await protocolClient.refreshANC(deviceName: state.deviceName)
+            }
         } catch {
             appendDebugEvent("error \(error.localizedDescription)")
         }
@@ -335,8 +427,7 @@ final class EarbudsViewModel: ObservableObject {
             return true
         }
 
-        let lowercasedName = snapshot.name.lowercased()
-        return ["oppo", "oneplus", "realme", "enco", "buds"].contains { lowercasedName.contains($0) }
+        return OppoDeviceProfile.isLikelyOppoAudioDevice(snapshot.name)
     }
 
     private func isCurrentDevice(_ snapshot: BluetoothDeviceSnapshot) -> Bool {

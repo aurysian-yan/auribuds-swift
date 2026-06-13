@@ -36,7 +36,7 @@ struct DeviceImageView: View {
         GeometryReader { geometry in
             Image(systemName: fallbackSystemName)
                 .font(.system(
-                    size: min(geometry.size.width, geometry.size.height) * 0.65,
+                    size: min(geometry.size.width, geometry.size.height) * 0.46,
                     weight: .regular
                 ))
                 .symbolRenderingMode(.monochrome)

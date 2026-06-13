@@ -112,19 +112,14 @@ final class DeviceImageProvider {
             }
         }
 
-        if let normalizedColorId,
-           let descriptor = descriptors.first(where: { normalized($0.colorId) == normalizedColorId }) {
-            return validated(descriptor.imageSet)
-        }
-
         if let descriptor = descriptors.first(where: { descriptor in
-            normalized(descriptor.colorId) == normalizedColorId &&
-            matches(modelName: modelName, descriptor: descriptor)
+            matches(modelName: modelName, descriptor: descriptor) &&
+                (normalizedColorId == nil || normalized(descriptor.colorId) == normalizedColorId)
         }) {
             return validated(descriptor.imageSet)
         }
 
-        if isKnownFamily(modelName) || normalizedProductId == nil {
+        if modelName == nil && normalizedProductId == nil {
             return validated(defaultImageSet)
         }
 
@@ -166,7 +161,10 @@ final class DeviceImageProvider {
 
         let imageNames = matchingDescriptors.compactMap { availableImageName($0.imageSet.primary) }
 
-        if imageNames.isEmpty, let defaultImageName = availableImageName(defaultImageSet.primary) {
+        if imageNames.isEmpty,
+           productId == nil,
+           modelName == nil,
+           let defaultImageName = availableImageName(defaultImageSet.primary) {
             return [defaultImageName]
         }
 

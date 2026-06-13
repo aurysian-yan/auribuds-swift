@@ -11,10 +11,10 @@ struct StatusHeaderView: View {
             return .green
 
         case .disconnected:
-            return .red
+            return .secondary
 
         case .connecting, .handshaking, .reconnecting:
-            return .white
+            return .accentColor
 
         case .error, .handshakeFailed:
             return .yellow
@@ -34,7 +34,7 @@ struct StatusHeaderView: View {
         HStack(alignment: .center, spacing: 16) {
             DeviceImageView(
                 imageName: DeviceImageProvider.shared.primaryImageName(for: viewModel.state),
-                fallbackSystemName: "headphones",
+                fallbackSystemName: viewModel.state.currentDevice?.fallbackSystemName ?? "headphones",
                 size: CGSize(width: 112, height: 112)
             )
 

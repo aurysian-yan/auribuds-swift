@@ -7,6 +7,10 @@ struct PairedDevice: Identifiable, Equatable {
     let lastConnectedAt: Date?
     let selectedImageName: String?
     let availableImageNames: [String]
+    let snapshot: BluetoothDeviceSnapshot?
+    let isSystemConnected: Bool
+    let isAppControllable: Bool
+    let fallbackSystemName: String
 
     init(
         id: String,
@@ -14,7 +18,11 @@ struct PairedDevice: Identifiable, Equatable {
         modelIdentifier: String,
         lastConnectedAt: Date?,
         selectedImageName: String?,
-        availableImageNames: [String]
+        availableImageNames: [String],
+        snapshot: BluetoothDeviceSnapshot?,
+        isSystemConnected: Bool,
+        isAppControllable: Bool,
+        fallbackSystemName: String
     ) {
         self.id = id
         self.displayName = displayName
@@ -22,19 +30,45 @@ struct PairedDevice: Identifiable, Equatable {
         self.lastConnectedAt = lastConnectedAt
         self.selectedImageName = selectedImageName
         self.availableImageNames = availableImageNames
+        self.snapshot = snapshot
+        self.isSystemConnected = isSystemConnected
+        self.isAppControllable = isAppControllable
+        self.fallbackSystemName = fallbackSystemName
     }
 
     init(state: EarbudsState) {
         let provider = DeviceImageProvider.shared
         let deviceId = provider.selectionKey(for: state)
+        let deviceName = state.currentDevice?.name ?? state.deviceName
 
         self.init(
             id: deviceId,
-            displayName: state.deviceName,
+            displayName: deviceName,
             modelIdentifier: state.currentDevice?.address ?? state.deviceName,
             lastConnectedAt: state.currentDevice?.timestamp,
             selectedImageName: provider.selectedImageName(for: state),
-            availableImageNames: provider.availableImageNames(for: state)
+            availableImageNames: provider.availableImageNames(for: state),
+            snapshot: state.currentDevice,
+            isSystemConnected: state.systemBluetoothConnected,
+            isAppControllable: state.currentDevice.map { OppoDeviceProfile.isLikelyOppoAudioDevice($0.name) } ?? true,
+            fallbackSystemName: state.currentDevice?.fallbackSystemName ?? "headphones"
+        )
+    }
+
+    init(snapshot: BluetoothDeviceSnapshot, isAppControllable: Bool? = nil) {
+        let provider = DeviceImageProvider.shared
+
+        self.init(
+            id: provider.selectionKey(for: snapshot),
+            displayName: snapshot.name,
+            modelIdentifier: snapshot.address.isEmpty ? snapshot.name : snapshot.address,
+            lastConnectedAt: snapshot.timestamp,
+            selectedImageName: provider.selectedImageName(for: snapshot),
+            availableImageNames: provider.availableImageNames(for: snapshot),
+            snapshot: snapshot,
+            isSystemConnected: snapshot.isConnected,
+            isAppControllable: isAppControllable ?? OppoDeviceProfile.isLikelyOppoAudioDevice(snapshot.name),
+            fallbackSystemName: snapshot.fallbackSystemName
         )
     }
 

@@ -70,8 +70,10 @@ struct ConnectionPopupView: View {
                 .frame(width: 46, height: 46)
 
                 Spacer()
-
-                BatteryRingView(value: state.batteryLevel)
+                
+                HStack() {}
+                .frame(width: 46, height: 46)
+//                BatteryRingView(value: state.batteryLevel)
             }
             .padding(.horizontal, 14)
         }
