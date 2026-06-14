@@ -5,7 +5,7 @@
 使用 `oppo_images_pipeline.py` 完成下载、筛选、按真实颜色重命名和生成设备颜色表。
 
 ```bash
-cd /Users/aurysian/Documents/项目/oppoPods/scripts
+cd scripts
 python3 oppo_images_pipeline.py --target named --raw-dir oppo_images --alpha-dir oppo_alpha_images --named-dir output-images
 ```
 

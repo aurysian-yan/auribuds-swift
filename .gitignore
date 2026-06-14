@@ -1,5 +1,21 @@
+# macOS
+.DS_Store
+
+# Xcode user state and local build products
+DerivedData/
+build/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Generated or downloaded image pipeline data
 /Phase1RfcommPoC/Docs
 /scripts/oppo_images
-/scripts/output-images-stated
 /scripts/oppo_alpha_images
 /scripts/output-images
+/scripts/output-images-stated
+/scripts/output-images-trimmed
+/scripts/output-images-trimmed-v2
