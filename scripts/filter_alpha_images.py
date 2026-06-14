@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 
-TARGET_SIZES = {(1440, 1440), (480, 480)}
+TARGET_SIZES = {(1440, 1440)}
 SUPPORTED_SUFFIXES = {".png", ".webp", ".gif", ".jpg", ".jpeg"}
 
 

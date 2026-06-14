@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import csv
 import json
 import re
 import shutil
@@ -15,8 +16,17 @@ from urllib.request import Request, urlopen
 CATEGORY_API_URL = "https://www.opposhop.cn/cn/oapi/goods-business/category/goods"
 DETAIL_API_URL = "https://store.oppo.com/cn/oapi/cms-business/goods/switch"
 IMAGE_PATTERN = re.compile(r"https?://[^\s\"'<>]+?\.(?:png|jpe?g|webp|gif)(?:\?[^\s\"'<>]*)?", re.I)
-TARGET_SIZES = {(1440, 1440), (480, 480)}
+TARGET_SIZES = {(1440, 1440)}
 SUPPORTED_SUFFIXES = {".png", ".webp", ".gif", ".jpg", ".jpeg"}
+METADATA_FILE_NAME = "image_metadata.json"
+DEVICE_MARKERS = (
+    "真无线降噪蓝牙耳机",
+    "真无线蓝牙耳机",
+    "真无线降噪耳机",
+    "真无线耳机",
+    "蓝牙耳机",
+    "耳机",
+)
 
 
 class ImageInfoError(Exception):
@@ -114,6 +124,14 @@ def collect_images(value) -> list[str]:
     return list(dict.fromkeys(result))
 
 
+def source_key_from_url(url: str) -> str:
+    return Path(urlparse(url).path).stem
+
+
+def source_key_from_path(path: Path) -> str:
+    return re.sub(r"^\d+_", "", path.stem)
+
+
 def file_name_for(index: int, url: str) -> str:
     path = urlparse(url).path
     suffix = Path(path).suffix or ".jpg"
@@ -121,8 +139,7 @@ def file_name_for(index: int, url: str) -> str:
     return f"{index:03d}_{stem[:80]}{suffix}"
 
 
-def download_sku_images(sku_id: str, raw_dir: Path, overwrite: bool) -> tuple[int, list[str]]:
-    payload = fetch_detail_payload(sku_id)
+def download_sku_images(sku_id: str, payload: dict, raw_dir: Path, overwrite: bool) -> tuple[int, list[str]]:
     urls = collect_images(payload)
     sku_dir = raw_dir / sku_id
     sku_dir.mkdir(parents=True, exist_ok=True)
@@ -141,6 +158,84 @@ def download_sku_images(sku_id: str, raw_dir: Path, overwrite: bool) -> tuple[in
             print(f"[warn] {sku_id}: 下载失败 {url} ({error})", file=sys.stderr)
 
     return downloaded, failed
+
+
+def add_image_metadata(
+    metadata: dict[tuple[str, str], list[dict[str, str]]],
+    sku_id: str,
+    url,
+    device: str,
+    color,
+    variant_sku_id=None,
+    source: str = "",
+) -> None:
+    if not url or not color:
+        return
+    key = (sku_id, source_key_from_url(url))
+    metadata.setdefault(key, []).append(
+        {
+            "skuId": sku_id,
+            "variantSkuId": variant_sku_id or "",
+            "device": device,
+            "color": color,
+            "source": source,
+            "sourceUrl": url,
+        }
+    )
+
+
+def build_detail_metadata(sku_id: str, payload: dict, device: str) -> dict[tuple[str, str], dict[str, str]]:
+    data = payload.get("data", {}).get("_$data", {})
+    candidates: dict[tuple[str, str], list[dict[str, str]]] = {}
+    sku_colors = {}
+
+    for item in data.get("attributeList", []) or []:
+        variant_sku_id = item.get("skuId")
+        attributes = item.get("attributes") or {}
+        color = attributes.get("key1") or next(iter(attributes.values()), "")
+        if variant_sku_id and color:
+            variant_sku_id = str(variant_sku_id)
+            sku_colors[variant_sku_id] = color
+            add_image_metadata(candidates, sku_id, item.get("spuImageUrl"), device, color, variant_sku_id, "attribute.spuImageUrl")
+            add_image_metadata(candidates, sku_id, item.get("skuImageUrl"), device, color, variant_sku_id, "attribute.skuImageUrl")
+
+        for group in item.get("value") or []:
+            for option in group.get("list") or []:
+                option_color = option.get("_$text1") or option.get("_$text")
+                add_image_metadata(candidates, sku_id, option.get("imageUrl"), device, option_color, None, "attribute.option.imageUrl")
+            for option in group.get("preList") or []:
+                option_color = option.get("_$text") or option.get("_$text1")
+                add_image_metadata(candidates, sku_id, option.get("_$url"), device, option_color, None, "attribute.preList.url")
+
+    for item in data.get("showcaseList", []) or []:
+        variant_sku_id = str(item.get("skuId") or "")
+        color = sku_colors.get(variant_sku_id)
+        for image in item.get("list") or []:
+            add_image_metadata(
+                candidates,
+                sku_id,
+                image.get("_$url") or image.get("imageUrl"),
+                device,
+                color,
+                variant_sku_id,
+                "showcaseList",
+            )
+
+    result = {}
+    for key, items in candidates.items():
+        colors = {item["color"] for item in items if item.get("color")}
+        if len(colors) == 1:
+            result[key] = items[0]
+    return result
+
+
+def write_image_metadata(raw_dir: Path, metadata: dict[tuple[str, str], dict[str, str]]) -> None:
+    output = {}
+    for (sku_id, source_key), value in sorted(metadata.items()):
+        output.setdefault(sku_id, {})[source_key] = value
+    target = raw_dir / METADATA_FILE_NAME
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def read_png_info(data: bytes) -> tuple[int, int, bool]:
@@ -293,10 +388,16 @@ def image_suffix(path: Path) -> str:
     return path.suffix.lower()
 
 
-def filter_alpha_images(raw_dir: Path, alpha_dir: Path) -> tuple[int, int, int]:
+def filter_alpha_images(
+    raw_dir: Path,
+    alpha_dir: Path,
+    metadata=None,
+    require_metadata: bool = False,
+) -> tuple[int, int, int, int]:
     copied = 0
     skipped = 0
     failed = 0
+    missing_metadata = 0
 
     for source in sorted(raw_dir.rglob("*")):
         if not source.is_file() or source.suffix.lower() not in SUPPORTED_SUFFIXES:
@@ -313,12 +414,25 @@ def filter_alpha_images(raw_dir: Path, alpha_dir: Path) -> tuple[int, int, int]:
             skipped += 1
             continue
 
+        source_key = (source.parent.name, source_key_from_path(source))
+        if require_metadata and (not metadata or source_key not in metadata):
+            missing_metadata += 1
+            continue
+
         target = alpha_dir / source.relative_to(raw_dir)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         copied += 1
 
-    return copied, skipped, failed
+    return copied, skipped, failed, missing_metadata
+
+
+def clear_images(directory: Path) -> None:
+    if not directory.exists():
+        return
+    for path in directory.rglob("*"):
+        if path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES:
+            path.unlink()
 
 
 def safe_name(value: str) -> str:
@@ -327,15 +441,20 @@ def safe_name(value: str) -> str:
     return value or "未命名商品"
 
 
-def flatten_named_images(alpha_dir: Path, named_dir: Path, names: dict[str, str]) -> tuple[int, list[str]]:
+def flatten_named_images(
+    alpha_dir: Path,
+    named_dir: Path,
+    metadata: dict[tuple[str, str], dict[str, str]],
+    names: dict[str, str],
+) -> tuple[int, list[str], int]:
     copied = 0
     missing_names = []
+    skipped = 0
+    counters: dict[tuple[str, str], int] = {}
 
     for sku_dir in sorted(path for path in alpha_dir.iterdir() if path.is_dir()):
         sku_id = sku_dir.name
-        product_name = names.get(sku_id)
-        if not product_name:
-            product_name = sku_id
+        if sku_id not in names:
             missing_names.append(sku_id)
 
         files = sorted(
@@ -343,20 +462,114 @@ def flatten_named_images(alpha_dir: Path, named_dir: Path, names: dict[str, str]
             for path in sku_dir.iterdir()
             if path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES
         )
-        for index, source in enumerate(files, 1):
-            target_name = f"{safe_name(product_name)}_{index:03d}{image_suffix(source)}"
+        for source in files:
+            info = metadata.get((sku_id, source_key_from_path(source)))
+            if not info:
+                skipped += 1
+                continue
+            device = safe_name(info["device"])
+            color = safe_name(info["color"])
+            key = (device, color)
+            counters[key] = counters.get(key, 0) + 1
+            target_name = f"{device}__{color}_{counters[key]:03d}{image_suffix(source)}"
             target = named_dir / target_name
             named_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
             copied += 1
 
-    return copied, missing_names
+    return copied, missing_names, skipped
+
+
+def product_name_from_image(path: Path) -> str:
+    return re.sub(r"_\d+\.[^.]+$", "", path.name)
+
+
+def split_device_color(product_name: str) -> tuple[str, str]:
+    value = re.sub(r"\s+", " ", product_name).strip()
+    value = re.sub(r"\s*官方标配$", "", value).strip()
+    if "__" in value:
+        device, color = value.split("__", 1)
+        return device.strip(), color.strip()
+
+    for marker in DEVICE_MARKERS:
+        token = f" {marker} "
+        if token in value:
+            device, color = value.split(token, 1)
+            return device.strip(), color.strip()
+
+    parts = value.rsplit(" ", 1)
+    if len(parts) == 2:
+        return parts[0].strip(), parts[1].strip()
+    return value, ""
+
+
+def device_color_rows(image_dir: Path) -> list[dict[str, object]]:
+    groups = {}
+    for source in sorted(image_dir.iterdir()):
+        if not source.is_file() or source.suffix.lower() not in SUPPORTED_SUFFIXES:
+            continue
+
+        product_name = product_name_from_image(source)
+        device, color = split_device_color(product_name)
+        key = (product_name, device, color)
+        if key not in groups:
+            groups[key] = {
+                "productName": product_name,
+                "device": device,
+                "color": color,
+                "imageCount": 0,
+                "files": [],
+            }
+        groups[key]["imageCount"] += 1
+        groups[key]["files"].append(source.name)
+
+    return list(groups.values())
+
+
+def resolve_map_path(image_dir: Path, value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return image_dir / path
+
+
+def write_device_color_map(image_dir: Path, csv_path: Path, json_path: Path) -> int:
+    rows = device_color_rows(image_dir)
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with csv_path.open("w", encoding="utf-8-sig", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=["productName", "device", "color", "imageCount"])
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(
+                {
+                    "productName": row["productName"],
+                    "device": row["device"],
+                    "color": row["color"],
+                    "imageCount": row["imageCount"],
+                }
+            )
+
+    json_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    return len(rows)
 
 
 def resolve_sku_ids(args, goods: list[dict]) -> list[str]:
     if args.sku_ids:
         return args.sku_ids
     return [str(item["skuId"]) for item in goods if item.get("skuId")]
+
+
+def goods_device_map(goods: list[dict]) -> dict[str, str]:
+    result = {}
+    for item in goods:
+        sku_id = str(item.get("skuId") or "")
+        sku_name = item.get("skuName") or item.get("spuName") or sku_id
+        if sku_id:
+            device, _ = split_device_color(sku_name)
+            result[sku_id] = device
+    return result
 
 
 def write_failed_downloads(raw_dir: Path, failed_downloads: dict[str, list[str]]) -> None:
@@ -371,12 +584,15 @@ def write_failed_downloads(raw_dir: Path, failed_downloads: dict[str, list[str]]
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("sku_ids", nargs="*", help="不传则自动使用分类接口返回的全部 SKU")
-    parser.add_argument("--target", choices=("raw", "alpha", "named"), default="named")
+    parser.add_argument("--target", choices=("raw", "alpha", "named", "map"), default="named")
     parser.add_argument("--category-code", default="003925")
     parser.add_argument("--page-size", type=int, default=50)
     parser.add_argument("--raw-dir", default="oppo_images")
     parser.add_argument("--alpha-dir", default="oppo_alpha_images")
     parser.add_argument("--named-dir", default="oppo_alpha_images_named")
+    parser.add_argument("--map-source-dir", default="")
+    parser.add_argument("--map-csv", default="device_color_map.csv")
+    parser.add_argument("--map-json", default="device_color_map.json")
     parser.add_argument("--no-download", action="store_true", help="跳过下载，直接使用 raw-dir 里的已有图片")
     parser.add_argument("--overwrite", action="store_true", help="重新下载并覆盖 raw-dir 里已有的同名图片")
     args = parser.parse_args()
@@ -385,17 +601,41 @@ def main() -> int:
     alpha_dir = Path(args.alpha_dir)
     named_dir = Path(args.named_dir)
 
+    if args.target == "map":
+        map_source_dir = Path(args.map_source_dir) if args.map_source_dir else named_dir
+        row_count = write_device_color_map(
+            map_source_dir,
+            resolve_map_path(map_source_dir, args.map_csv),
+            resolve_map_path(map_source_dir, args.map_json),
+        )
+        print(f"设备颜色记录: {row_count}")
+        print(f"输出目录: {map_source_dir}")
+        return 0
+
     goods = fetch_goods(args.category_code, args.page_size)
     names = goods_name_map(goods)
+    devices = goods_device_map(goods)
     sku_ids = resolve_sku_ids(args, goods)
     if not sku_ids:
         raise SystemExit("没有可处理的 SKU")
 
+    if args.no_download and not raw_dir.is_dir():
+        raise SystemExit(f"输入原图目录不存在: {raw_dir}")
+
     total_downloaded = 0
     failed_downloads = {}
+    detail_payloads = {}
+    metadata = {}
+    for sku_id in sku_ids:
+        payload = fetch_detail_payload(sku_id)
+        detail_payloads[sku_id] = payload
+        metadata.update(build_detail_metadata(sku_id, payload, devices.get(sku_id) or split_device_color(names.get(sku_id, sku_id))[0]))
+    if raw_dir.is_dir():
+        write_image_metadata(raw_dir, metadata)
+
     if not args.no_download:
         for sku_id in sku_ids:
-            downloaded, failed = download_sku_images(sku_id, raw_dir, args.overwrite)
+            downloaded, failed = download_sku_images(sku_id, detail_payloads[sku_id], raw_dir, args.overwrite)
             total_downloaded += downloaded
             if failed:
                 failed_downloads[sku_id] = failed
@@ -406,20 +646,38 @@ def main() -> int:
         print(f"输出目录: {raw_dir}")
         return 0
 
-    copied, skipped, failed = filter_alpha_images(raw_dir, alpha_dir)
+    clear_images(alpha_dir)
+    copied, skipped, failed, missing_metadata = filter_alpha_images(
+        raw_dir,
+        alpha_dir,
+        metadata,
+        require_metadata=args.target == "named",
+    )
     print(f"Alpha 图片: {copied}")
     print(f"已跳过: {skipped}")
     print(f"识别失败: {failed}")
+    print(f"无颜色映射: {missing_metadata}")
 
     if args.target == "alpha":
         print(f"输出目录: {alpha_dir}")
         return 0
 
-    named_count, missing_names = flatten_named_images(alpha_dir, named_dir, names)
+    if not alpha_dir.is_dir():
+        raise SystemExit(f"Alpha 目录不存在: {alpha_dir}")
+
+    clear_images(named_dir)
+    named_count, missing_names, skipped_named = flatten_named_images(alpha_dir, named_dir, metadata, names)
     print(f"已复制并重命名: {named_count}")
+    print(f"命名阶段跳过: {skipped_named}")
     print(f"输出目录: {named_dir}")
     if missing_names:
         print(f"[warn] 以下 SKU 未在分类接口中找到名称: {', '.join(missing_names)}", file=sys.stderr)
+    row_count = write_device_color_map(
+        named_dir,
+        resolve_map_path(named_dir, args.map_csv),
+        resolve_map_path(named_dir, args.map_json),
+    )
+    print(f"设备颜色记录: {row_count}")
     return 0
 
 
