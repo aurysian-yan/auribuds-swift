@@ -113,7 +113,7 @@ final class SafeRfcommDelegate: NSObject {
     ) {}
 }
 
-final class SafeRfcommConnection {
+final class SafeRfcommConnection: OppoTransportConnection {
     private let channel: IOBluetoothRFCOMMChannel
     private let delegate: SafeRfcommDelegate
     private let closeTimeout: TimeInterval

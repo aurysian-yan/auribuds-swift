@@ -1,3 +1,4 @@
+import CoreBluetooth
 import Foundation
 import IOBluetooth
 
@@ -10,6 +11,9 @@ final class BluetoothMonitor: NSObject, ObservableObject {
 
     private var connectNotification: IOBluetoothUserNotification?
     private var disconnectNotifications: [String: IOBluetoothUserNotification] = [:]
+    private lazy var bleCentral = CBCentralManager(delegate: self, queue: nil)
+    private var bleSnapshots: [String: BluetoothDeviceSnapshot] = [:]
+    private var classicSnapshots: [String: BluetoothDeviceSnapshot] = [:]
     private var isStarted = false
 
     private override init() {
@@ -26,6 +30,7 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         )
 
         refreshAvailableDevices()
+        startBLEScanIfPossible()
     }
 
     func stop() {
@@ -37,6 +42,9 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         }
 
         disconnectNotifications.removeAll()
+        bleCentral.stopScan()
+        bleSnapshots.removeAll()
+        classicSnapshots.removeAll()
         isStarted = false
     }
 
@@ -61,15 +69,14 @@ final class BluetoothMonitor: NSObject, ObservableObject {
             registerDisconnectNotification(for: device)
         }
 
-        let snapshots = devices
-            .map { snapshot(for: $0, isConnected: $0.isConnected()) }
-            .sorted { first, second in
-                first.name.localizedStandardCompare(second.name) == .orderedAscending
+        classicSnapshots = Dictionary(
+            uniqueKeysWithValues: devices.map { device in
+                let snapshot = snapshot(for: device, isConnected: device.isConnected())
+                return (snapshot.id, snapshot)
             }
+        )
 
-        DispatchQueue.main.async { [weak self] in
-            self?.availableDevices = snapshots
-        }
+        publishAvailableDevices()
     }
 
     private func registerDisconnectNotification(for device: IOBluetoothDevice) {
@@ -94,6 +101,17 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         }
     }
 
+    private func publishAvailableDevices() {
+        let snapshots = Array((classicSnapshots.merging(bleSnapshots) { classic, _ in classic }).values)
+            .sorted { first, second in
+                first.name.localizedStandardCompare(second.name) == .orderedAscending
+            }
+
+        DispatchQueue.main.async { [weak self] in
+            self?.availableDevices = snapshots
+        }
+    }
+
     private func publish(_ snapshot: BluetoothDeviceSnapshot, update: @escaping (BluetoothDeviceSnapshot) -> Void) {
         DispatchQueue.main.async {
             update(snapshot)
@@ -111,7 +129,50 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         )
     }
 
+    private func startBLEScanIfPossible() {
+        guard isStarted, bleCentral.state == .poweredOn, !bleCentral.isScanning else { return }
+        bleCentral.scanForPeripherals(
+            withServices: nil,
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
+        )
+    }
+
+    private func snapshot(for peripheral: CBPeripheral, advertisementData: [String: Any]) -> BluetoothDeviceSnapshot {
+        let advertisedName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
+        return BluetoothDeviceSnapshot(
+            name: advertisedName ?? peripheral.name ?? "BLE Device",
+            address: peripheral.identifier.uuidString.uppercased(),
+            isConnected: peripheral.state == .connected,
+            timestamp: Date(),
+            majorDeviceClass: 4,
+            minorDeviceClass: 1
+        )
+    }
+
     private func normalizedAddress(_ address: String?) -> String {
         (address ?? "").uppercased()
+    }
+}
+
+extension BluetoothMonitor: CBCentralManagerDelegate {
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        if central.state == .poweredOn {
+            startBLEScanIfPossible()
+        } else {
+            bleSnapshots.removeAll()
+            publishAvailableDevices()
+        }
+    }
+
+    func centralManager(
+        _ central: CBCentralManager,
+        didDiscover peripheral: CBPeripheral,
+        advertisementData: [String: Any],
+        rssi RSSI: NSNumber
+    ) {
+        let snapshot = snapshot(for: peripheral, advertisementData: advertisementData)
+        guard HeadphoneAdapterRegistry.shared.canControl(snapshot) else { return }
+        bleSnapshots[snapshot.id] = snapshot
+        publishAvailableDevices()
     }
 }
