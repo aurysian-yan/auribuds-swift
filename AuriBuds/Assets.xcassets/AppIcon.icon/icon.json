@@ -1,0 +1,418 @@
+{
+  "features" : [
+    "refractivity"
+  ],
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:0.06933,0.06860,0.09470,1.00000",
+          "display-p3:0.12156,0.05626,0.18370,1.00000"
+        ]
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : "system-dark"
+    }
+  ],
+  "groups" : [
+    {
+      "blend-mode" : "plus-lighter",
+      "blur-material" : 0.8,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.42353,0.48627,1.00000,0.89000",
+              "display-p3:0.73755,0.35913,0.64176,0.74000"
+            ]
+          },
+          "image-name" : "airpods.pro.left 4.svg",
+          "name" : "airpods.pro.left 4",
+          "opacity" : 1,
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.5,
+                "translation-in-points" : [
+                  6,
+                  3
+                ]
+              }
+            },
+            {
+              "idiom" : "watchOS",
+              "value" : {
+                "scale" : 1.25,
+                "translation-in-points" : [
+                  3.1625000000000227,
+                  5.20172757358722
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "lighting" : "individual",
+      "position-specializations" : [
+        {
+          "idiom" : "square",
+          "value" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              6,
+              3
+            ]
+          }
+        },
+        {
+          "idiom" : "watchOS",
+          "value" : {
+            "scale" : 1.25,
+            "translation-in-points" : [
+              22.77600135442981,
+              10.726761928215296
+            ]
+          }
+        }
+      ],
+      "refractivity" : {
+        "depth" : 0.6018359375,
+        "enabled" : true,
+        "strength" : -0.2316796875
+      },
+      "shadow-specializations" : [
+        {
+          "value" : {
+            "kind" : "layer-color",
+            "opacity" : 0.16
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "kind" : "neutral",
+            "opacity" : 0.8
+          }
+        }
+      ],
+      "specular-specializations" : [
+        {
+          "value" : "inside"
+        },
+        {
+          "appearance" : "tinted",
+          "value" : "inside"
+        }
+      ],
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.42
+      }
+    },
+    {
+      "blend-mode-specializations" : [
+        {
+          "value" : "plus-lighter"
+        },
+        {
+          "appearance" : "dark",
+          "value" : "lighten"
+        }
+      ],
+      "blur-material-specializations" : [
+        {
+          "value" : 0.66
+        },
+        {
+          "appearance" : "dark",
+          "value" : 1
+        }
+      ],
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.56000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.72000"
+              }
+            }
+          ],
+          "image-name-specializations" : [
+            {
+              "value" : "airpods.pro.left 3.svg"
+            },
+            {
+              "idiom" : "square",
+              "value" : "airpods.pro.left 3.svg"
+            }
+          ],
+          "name" : "airpods.pro.left 3",
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.5,
+                "translation-in-points" : [
+                  6,
+                  3
+                ]
+              }
+            },
+            {
+              "idiom" : "watchOS",
+              "value" : {
+                "scale" : 1.25,
+                "translation-in-points" : [
+                  18.50042207236811,
+                  6.572080008938315
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "fill" : {
+            "solid" : "display-p3:0.02708,0.24979,0.01870,0.42000"
+          },
+          "image-name" : "airpods.pro.left 13.svg",
+          "name" : "airpods.pro.left 13",
+          "opacity" : 1,
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.5,
+                "translation-in-points" : [
+                  6,
+                  6
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "blend-mode" : "plus-lighter",
+          "glass" : false,
+          "image-name-specializations" : [
+            {
+              "value" : "airpods.pro.left 14.png"
+            },
+            {
+              "idiom" : "square",
+              "value" : "airpods.pro.left 14.png"
+            }
+          ],
+          "name" : "airpods.pro.left 14",
+          "opacity-specializations" : [
+            {
+              "value" : 0.81
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 0
+            }
+          ],
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.47,
+                "translation-in-points" : [
+                  106,
+                  43
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "lighting" : "individual",
+      "position-specializations" : [
+        {
+          "idiom" : "square",
+          "value" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              6,
+              3
+            ]
+          }
+        },
+        {
+          "idiom" : "watchOS",
+          "value" : {
+            "scale" : 1.25,
+            "translation-in-points" : [
+              22.77600135442981,
+              10.726761928215296
+            ]
+          }
+        }
+      ],
+      "refractivity-specializations" : [
+        {
+          "value" : {
+            "depth" : 0.2739453125,
+            "enabled" : false,
+            "strength" : 0.0725
+          }
+        },
+        {
+          "appearance" : "dark",
+          "value" : {
+            "depth" : 0.2739453125,
+            "enabled" : true,
+            "strength" : 0.0725
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "specular" : "inside",
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
+    },
+    {
+      "blend-mode-specializations" : [
+        {
+          "value" : "plus-lighter"
+        },
+        {
+          "appearance" : "dark",
+          "value" : "plus-lighter"
+        }
+      ],
+      "layers" : [
+        {
+          "blend-mode" : "multiply",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.00000,0.00000,0.00000,0.22000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.00000,0.00000,0.00000,0.39000"
+              }
+            }
+          ],
+          "glass" : false,
+          "image-name" : "airpods.pro.left 2.svg",
+          "name" : "airpods.pro.left 2",
+          "position-specializations" : [
+            {
+              "value" : {
+                "scale" : 1,
+                "translation-in-points" : [
+                  7.153254469852584,
+                  39.950207845759564
+                ]
+              }
+            },
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.5,
+                "translation-in-points" : [
+                  6,
+                  59.17263989958087
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.34000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.41000"
+              }
+            }
+          ],
+          "image-name" : "airpods.pro.left 1.svg",
+          "name" : "airpods.pro.left 1",
+          "position-specializations" : [
+            {
+              "value" : {
+                "scale" : 1,
+                "translation-in-points" : [
+                  8.189151779868098,
+                  3.778951460625933
+                ]
+              }
+            },
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.5,
+                "translation-in-points" : [
+                  6,
+                  3
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "position-specializations" : [
+        {
+          "idiom" : "square",
+          "value" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              6,
+              3
+            ]
+          }
+        },
+        {
+          "idiom" : "watchOS",
+          "value" : {
+            "scale" : 1.5,
+            "translation-in-points" : [
+              22.77600135442981,
+              10.726761928215296
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.6
+      },
+      "specular" : "inside",
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
