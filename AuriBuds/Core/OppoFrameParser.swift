@@ -31,6 +31,7 @@ enum OppoFrameParser {
     static func isANCCandidateFrame(_ data: Data) -> Bool {
         let bytes = Array(data)
         guard bytes.count >= 6, bytes.contains(0xAA) else { return false }
+        guard !containsSequence(ancAckBytes, in: bytes) else { return true }
 
         for index in 0..<(bytes.count - 1) {
             if bytes[index] == 0x0C && bytes[index + 1] == 0x81 {
@@ -71,6 +72,10 @@ enum OppoFrameParser {
         let bytes = Array(data)
         guard bytes.count >= 6, bytes.contains(0xAA) else { return nil }
 
+        if let queryMode = decodeANCQueryMode(from: bytes) {
+            return queryMode
+        }
+
         for index in 0..<(bytes.count - 1) {
             let isModeFrame = (bytes[index] == 0x0C && bytes[index + 1] == 0x81)
                 || (bytes[index] == 0x04 && bytes[index + 1] == 0x02)
@@ -90,6 +95,17 @@ enum OppoFrameParser {
         }
 
         return nil
+    }
+
+    private static func decodeANCQueryMode(from bytes: [UInt8]) -> ANCMode? {
+        guard let payload = commandPayload(in: bytes, commandLow: 0x0C, commandHigh: 0x81),
+              payload.count >= 3,
+              payload[0] == 0x00,
+              payload[1] == 0x01 else {
+            return nil
+        }
+
+        return ancMode(from: payload[2])
     }
 
     private static func parseBatteryFields(in bytes: [UInt8], after startIndex: Int) -> (left: UInt8, right: UInt8, batteryCase: UInt8)? {
@@ -120,6 +136,40 @@ enum OppoFrameParser {
         }
 
         return false
+    }
+
+    private static func ancMode(from modeValue: UInt8) -> ANCMode? {
+        switch modeValue {
+        case 0x01:
+            return .off
+        case 0x02:
+            return .noiseCancellation
+        case 0x04:
+            return .transparency
+        default:
+            return nil
+        }
+    }
+
+    private static func commandPayload(in bytes: [UInt8], commandLow: UInt8, commandHigh: UInt8) -> [UInt8]? {
+        guard bytes.count >= 9 else { return nil }
+
+        for index in 0...(bytes.count - 9) {
+            guard bytes[index] == 0xAA,
+                  bytes[index + 4] == commandLow,
+                  bytes[index + 5] == commandHigh else {
+                continue
+            }
+
+            let payloadLength = Int(bytes[index + 7]) | (Int(bytes[index + 8]) << 8)
+            let payloadStart = index + 9
+            let payloadEnd = payloadStart + payloadLength
+            guard payloadEnd <= bytes.count else { continue }
+
+            return Array(bytes[payloadStart..<payloadEnd])
+        }
+
+        return nil
     }
 
     private static func containsSequence(_ sequence: [UInt8], in bytes: [UInt8]) -> Bool {

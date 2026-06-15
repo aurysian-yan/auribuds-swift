@@ -6,8 +6,8 @@
     {
       "value" : {
         "linear-gradient" : [
-          "gray:0.17953,1.00000",
-          "gray:0.07457,1.00000"
+          "display-p3:0.78106,0.98584,0.64985,1.00000",
+          "display-p3:0.31937,0.72350,0.52290,1.00000"
         ]
       }
     },
@@ -24,13 +24,31 @@
   "groups" : [
     {
       "blend-mode" : "plus-lighter",
-      "blur-material" : 0.37,
+      "blur-material-specializations" : [
+        {
+          "value" : 0.54
+        },
+        {
+          "appearance" : "dark",
+          "value" : 0.8
+        }
+      ],
       "layers" : [
         {
           "blend-mode" : "normal",
-          "fill" : {
-            "solid" : "display-p3:0.59886,1.00000,0.50673,0.86000"
-          },
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "gray:1.00000,0.90000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.43168,1.00000,0.55733,0.56407"
+              }
+            }
+          ],
           "image-name" : "airpods.pro.left 4.svg",
           "name" : "airpods.pro.left 4",
           "position-specializations" : [
@@ -98,9 +116,19 @@
       "blur-material" : 0.66,
       "layers" : [
         {
-          "fill" : {
-            "solid" : "gray:1.00000,0.65000"
-          },
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.40000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.56000"
+              }
+            }
+          ],
           "image-name-specializations" : [
             {
               "value" : "airpods.pro.left 3.svg"
@@ -173,12 +201,20 @@
       }
     },
     {
-      "blend-mode" : "plus-lighter",
+      "blend-mode-specializations" : [
+        {
+          "value" : "plus-lighter"
+        },
+        {
+          "appearance" : "dark",
+          "value" : "plus-lighter"
+        }
+      ],
       "layers" : [
         {
           "blend-mode" : "multiply",
           "fill" : {
-            "solid" : "gray:0.00000,0.32801"
+            "solid" : "display-p3:0.00000,0.00000,0.00000,0.74000"
           },
           "glass" : false,
           "image-name" : "airpods.pro.left 2.svg",
@@ -206,9 +242,19 @@
           ]
         },
         {
-          "fill" : {
-            "solid" : "gray:1.00000,0.31000"
-          },
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.18000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.34000"
+              }
+            }
+          ],
           "image-name" : "airpods.pro.left 1.svg",
           "name" : "airpods.pro.left 1",
           "position-specializations" : [
