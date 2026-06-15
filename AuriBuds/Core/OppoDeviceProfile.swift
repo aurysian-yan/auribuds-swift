@@ -21,8 +21,7 @@ struct OppoDeviceProfile: Equatable {
             "oppo",
             "oneplus",
             "realme",
-            "enco",
-            "buds"
+            "enco"
         ].contains { normalizedName.contains($0) }
     }
 

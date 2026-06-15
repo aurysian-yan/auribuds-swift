@@ -13,12 +13,24 @@ enum BluetoothTransportError: Error, LocalizedError {
 }
 
 final class BluetoothClassicTransport {
-    private let openTimeout: TimeInterval = 8
-    private let closeTimeout: TimeInterval = 3
-    private let retryDelay: TimeInterval = 2
-    private let maxAttempts = 3
+    private let openTimeout: TimeInterval
+    private let closeTimeout: TimeInterval
+    private let retryDelay: TimeInterval
+    private let maxAttempts: Int
     private var cachedDevice: IOBluetoothDevice?
     private var cachedDeviceIdentifier: String?
+
+    init(
+        openTimeout: TimeInterval = 8,
+        closeTimeout: TimeInterval = 3,
+        retryDelay: TimeInterval = 2,
+        maxAttempts: Int = 3
+    ) {
+        self.openTimeout = openTimeout
+        self.closeTimeout = closeTimeout
+        self.retryDelay = retryDelay
+        self.maxAttempts = maxAttempts
+    }
 
     func pairedDevices() -> [IOBluetoothDevice] {
         (IOBluetoothDevice.pairedDevices() ?? []).compactMap { $0 as? IOBluetoothDevice }
@@ -68,11 +80,19 @@ final class BluetoothClassicTransport {
         let device = try findDevice(identifier: deviceIdentifier)
         let deviceName = device.name ?? fallbackName
         let profile = HeadphoneAdapterRegistry.shared.profile(for: deviceName)
+        var channelIDs = profile.rfcommChannelIDs
+        if XiaomiDeviceProfile.isLikelyXiaomiAudioDevice(deviceName) {
+            channelIDs = mergeChannels(
+                preferred: XiaomiDeviceProfile.preferredRFCOMMChannelIDs(for: device),
+                fallback: channelIDs
+            )
+        }
         var lastError: Error?
 
         onEvent("device \(deviceName)")
+        onEvent("rfcomm candidates \(channelIDs.map(String.init).joined(separator: ","))")
 
-        for channelID in profile.rfcommChannelIDs {
+        for channelID in channelIDs {
             do {
                 return try SafeRfcommConnection.connect(
                     device: device,
@@ -95,5 +115,13 @@ final class BluetoothClassicTransport {
         value
             .lowercased()
             .filter { $0.isLetter || $0.isNumber }
+    }
+
+    private func mergeChannels(
+        preferred: [BluetoothRFCOMMChannelID],
+        fallback: [BluetoothRFCOMMChannelID]
+    ) -> [BluetoothRFCOMMChannelID] {
+        var seen = Set<BluetoothRFCOMMChannelID>()
+        return (preferred + fallback).filter { seen.insert($0).inserted }
     }
 }

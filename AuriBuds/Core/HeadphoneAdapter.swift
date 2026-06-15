@@ -32,7 +32,7 @@ protocol HeadphoneAdapter {
 }
 
 final class HeadphoneAdapterRegistry {
-    static let shared = HeadphoneAdapterRegistry(adapters: [OppoHeadphoneAdapter()])
+    static let shared = HeadphoneAdapterRegistry(adapters: [XiaomiHeadphoneAdapter(), OppoHeadphoneAdapter()])
 
     private let adapters: [any HeadphoneAdapter]
 
@@ -65,6 +65,24 @@ final class HeadphoneAdapterRegistry {
     }
 }
 
+struct XiaomiHeadphoneAdapter: HeadphoneAdapter {
+    let id = "xiaomi"
+    let displayName = "Xiaomi / Redmi / POCO"
+
+    func canControl(deviceName: String) -> Bool {
+        XiaomiDeviceProfile.isLikelyXiaomiAudioDevice(deviceName)
+    }
+
+    func profile(for deviceName: String) -> HeadphoneAdapterProfile {
+        let profile = XiaomiDeviceProfile.profile(for: deviceName)
+        return HeadphoneAdapterProfile(rfcommChannelIDs: profile.channelIDs)
+    }
+
+    func makeManager() -> any HeadphoneManaging {
+        XiaomiProtocol()
+    }
+}
+
 struct OppoHeadphoneAdapter: HeadphoneAdapter {
     let id = "oppo"
     let displayName = "OPPO / OnePlus / realme"
@@ -80,6 +98,16 @@ struct OppoHeadphoneAdapter: HeadphoneAdapter {
 
     func makeManager() -> any HeadphoneManaging {
         OppoProtocol()
+    }
+}
+
+extension XiaomiProtocol: HeadphoneManaging {
+    func isBatteryDecodeFailure(_ error: Error) -> Bool {
+        (error as? XiaomiProtocolError) == .batteryDecodeFailed
+    }
+
+    func isHandshakeFailure(_ error: Error) -> Bool {
+        (error as? XiaomiProtocolError) == .handshakeFailed
     }
 }
 
