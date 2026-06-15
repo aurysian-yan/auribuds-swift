@@ -73,3 +73,8 @@ struct AuriBudsApp: App {
         }
     }
 }
+
+#Preview {
+    MainWindowView()
+        .environmentObject(EarbudsViewModel())
+}

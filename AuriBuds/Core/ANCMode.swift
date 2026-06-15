@@ -1,6 +1,6 @@
 import Foundation
 
-enum ANCMode: String, CaseIterable, Equatable {
+enum ANCMode: String, CaseIterable, Equatable, Hashable {
     case off
     case transparency
     case noiseCancellation

@@ -181,8 +181,8 @@ struct DeviceOverviewContent: View {
                 .matchedGeometryEffect(id: "device-status-row", in: transitionNamespace)
 
                 Text(displayState.deviceName)
-                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                    .fontWidth(.compressed)
+                    .font(.system(size: 40, weight: .medium))
+                    .fontWidth(.condensed)
                     .lineLimit(2)
                     .contentTransition(.interpolate)
                     .matchedGeometryEffect(id: "device-title", in: transitionNamespace)
@@ -211,17 +211,13 @@ struct DeviceOverviewContent: View {
             }
             .matchedGeometryEffect(id: "device-battery-row", in: transitionNamespace)
 
-            GeometryReader { geometry in
-                DeviceImageView(
-                    imageName: displayState.imageName,
-                    fallbackSystemName: displayState.fallbackSystemName
-                )
-                .frame(width: geometry.size.width, height: geometry.size.width)
-                .position(x: geometry.size.width / 2, y: geometry.size.width / 2)
-                .matchedGeometryEffect(id: "device-image", in: transitionNamespace)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .frame(maxWidth: .infinity)
+            DeviceImageView(
+                imageName: displayState.imageName,
+                fallbackSystemName: displayState.fallbackSystemName,
+                maxSize: 468
+            )
+            .frame(maxWidth: .infinity, alignment: .center)
+            .matchedGeometryEffect(id: "device-image", in: transitionNamespace)
         }
     }
 
@@ -250,4 +246,31 @@ private struct ANCModeSummaryView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+private struct HomePagePreview: View {
+    @Namespace private var transitionNamespace
+
+    var body: some View {
+        HomePageView(
+            viewModel: EarbudsViewModel(),
+            displayState: DeviceDisplayState(
+                deviceName: "OPPO Enco Air4 Pro",
+                connectionStatus: .connected,
+                leftBatteryText: "100%",
+                rightBatteryText: "100%",
+                caseBatteryText: "0%",
+                isCaseCharging: true,
+                imageName: "oppo_enco_air4_pro_black",
+                fallbackSystemName: "headphones",
+                ancModeTitle: "降噪"
+            ),
+            transitionNamespace: transitionNamespace
+        )
+        .frame(width: 420, height: 720)
+    }
+}
+
+#Preview {
+    HomePagePreview()
 }

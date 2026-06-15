@@ -1,5 +1,9 @@
 import SwiftUI
 
+enum AuriBudsPreferenceKey {
+    static let showsUnavailableDevices = "showsUnavailableDevices"
+}
+
 struct DevicesSidebarView: View {
     @ObservedObject var viewModel: EarbudsViewModel
     @Binding var currentPage: MainWindowPage
@@ -7,13 +11,20 @@ struct DevicesSidebarView: View {
     @ObservedObject var testDeviceStore: DebugTestDeviceStore
 #endif
     let errorLogCount: Int
+    @AppStorage(AuriBudsPreferenceKey.showsUnavailableDevices) private var showsUnavailableDevices = true
 
     private var devices: [PairedDevice] {
 #if DEBUG
-        return viewModel.availableDisplayDevices(testDevices: testDeviceStore.devices)
+        let allDevices = viewModel.availableDisplayDevices(testDevices: testDeviceStore.devices)
 #else
-        return viewModel.pairedDevices
+        let allDevices = viewModel.pairedDevices
 #endif
+
+        guard showsUnavailableDevices else {
+            return allDevices.filter(\.isAppControllable)
+        }
+
+        return allDevices
     }
 
     var body: some View {
@@ -30,7 +41,15 @@ struct DevicesSidebarView: View {
                     .listRowInsets(EdgeInsets(top: 2, leading: -8, bottom: 4, trailing: -8))
                     .listRowBackground(Color.clear)
                 }
+            } header: {
+                Text("已配对的设备")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
+                    .padding(.bottom, 6)
             }
+            .padding(.bottom, -4)
+            
             Section() {
                 SidebarNavigationRow(
                     title: "日志",
@@ -42,7 +61,7 @@ struct DevicesSidebarView: View {
                 }
                 .listRowInsets(EdgeInsets(top: 2, leading: -8, bottom: 4, trailing: -8))
                 .listRowBackground(Color.clear)
-
+                
                 SidebarNavigationRow(
                     title: "设置",
                     systemImage: "gearshape",
@@ -52,6 +71,14 @@ struct DevicesSidebarView: View {
                 }
                 .listRowInsets(EdgeInsets(top: 2, leading: -8, bottom: 4, trailing: -8))
                 .listRowBackground(Color.clear)
+            } header: {
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(height: 1)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .padding(.leading, 0)
+                    .padding(.trailing, 10)
             }
         }
         .listStyle(.sidebar)
@@ -96,8 +123,9 @@ private struct SidebarNavigationRow: View {
                         .font(.system(size: 14).weight(.semibold))
                 } icon: {
                     Image(systemName: systemImage)
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(width: 22, alignment: .center)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(width: 50, alignment: .center)
                 }
 
                 Spacer()
@@ -106,13 +134,14 @@ private struct SidebarNavigationRow: View {
                     Text(badgeCount > 99 ? "99+" : "\(badgeCount)")
                         .font(.system(size: 12).weight(.semibold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 5)
+                        .padding(.horizontal, 6)
                         .frame(minWidth: 18, minHeight: 18)
                         .background(.red, in: Capsule())
                 }
             }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 8)
+            .padding(.leading, 8)
+            .padding(.trailing, 12)
+            .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(selectionBackground, in: RoundedRectangle(cornerRadius: 12))
             .contentShape(Rectangle())
@@ -164,7 +193,7 @@ private struct DeviceSidebarRow: View {
             return connectionStatus.localizedTitle
         }
 
-        return device.isAppControllable ? connectionStatus.localizedTitle : "不可连接"
+        return connectionStatus.localizedTitle
     }
 
     init(
@@ -209,10 +238,7 @@ private struct DeviceSidebarRow: View {
                 .disabled(!canConnect)
             }
         } else {
-            Button(action: action) {
-                rowContent
-            }
-            .buttonStyle(.plain)
+            unavailableRowContent
         }
     }
 
@@ -247,6 +273,29 @@ private struct DeviceSidebarRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(selectionBackground, in: RoundedRectangle(cornerRadius: 12))
         .contentShape(Rectangle())
+    }
+
+    private var unavailableRowContent: some View {
+        HStack(spacing: 10) {
+            DeviceImageView(
+                imageName: imageName,
+                fallbackSystemName: device.fallbackSystemName,
+                size: CGSize(width: 30, height: 30)
+            )
+            .frame(width: 50, height: 38)
+
+            Text(device.displayName)
+                .font(.system(size: 14))
+                .strikethrough(true, color: .secondary)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+
+            Spacer()
+        }
+        .opacity(0.55)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 5)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -292,4 +341,34 @@ private struct DeviceSidebarRow: View {
     private func updateBlinking(isBlinking: Bool) {
         blinkStatusDot = isBlinking
     }
+}
+
+private struct DevicesSidebarPreview: View {
+    @StateObject private var viewModel = EarbudsViewModel()
+    @State private var currentPage: MainWindowPage = .home
+
+    var body: some View {
+        Group {
+#if DEBUG
+            DevicesSidebarView(
+                viewModel: viewModel,
+                currentPage: $currentPage,
+                testDeviceStore: DebugTestDeviceStore.shared,
+                errorLogCount: 2
+            )
+#else
+            DevicesSidebarView(
+                viewModel: viewModel,
+                currentPage: $currentPage,
+                errorLogCount: 2
+            )
+#endif
+        }
+        .environmentObject(viewModel)
+        .frame(width: 280, height: 560)
+    }
+}
+
+#Preview {
+    DevicesSidebarPreview()
 }

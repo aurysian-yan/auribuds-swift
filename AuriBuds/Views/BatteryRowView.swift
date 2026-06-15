@@ -22,3 +22,22 @@ struct BatteryRowView<Title: View>: View {
         .padding(.trailing, 4)
     }
 }
+
+#Preview {
+    HStack(spacing: 12) {
+        BatteryRowView(value: "100%") {
+            Image(systemName: "l.circle.fill")
+                .foregroundStyle(.secondary)
+        }
+
+        BatteryRowView(value: "85%") {
+            Image(systemName: "r.circle.fill")
+                .foregroundStyle(.secondary)
+        }
+
+        BatteryRowView(value: "40%") {
+            BatteryCaseChargingIcon(isCharging: true)
+        }
+    }
+    .padding()
+}

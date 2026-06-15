@@ -24,3 +24,11 @@ struct BatteryCaseChargingIcon: View {
         }
     }
 }
+
+#Preview {
+    HStack(spacing: 16) {
+        BatteryCaseChargingIcon(isCharging: false)
+        BatteryCaseChargingIcon(isCharging: true)
+    }
+    .padding()
+}

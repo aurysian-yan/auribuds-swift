@@ -43,7 +43,7 @@ private struct MainWindowConfigurator: NSViewRepresentable {
         window.titleVisibility = title.isEmpty ? .hidden : .visible
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .automatic
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.styleMask.insert(.fullSizeContentView)
         window.styleMask.remove(.fullScreen)
         window.collectionBehavior.remove(.fullScreenPrimary)
@@ -101,4 +101,11 @@ private struct MainWindowConfigurator: NSViewRepresentable {
             )
         }
     }
+}
+
+#Preview {
+    Text("AuriBuds")
+        .font(.title.bold())
+        .frame(width: 320, height: 220)
+        .mainWindowBehavior(title: "预览")
 }

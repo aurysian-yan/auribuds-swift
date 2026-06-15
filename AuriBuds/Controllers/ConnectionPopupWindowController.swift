@@ -236,3 +236,14 @@ final class ConnectionPopupPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
+
+#Preview {
+    let state = ConnectionPopupState()
+    state.deviceName = "OPPO Enco Air4 Pro"
+    state.status = .connected
+    state.imageName = DeviceImageProvider.shared.primaryImageName(modelName: state.deviceName)
+    state.isPresented = true
+
+    return ConnectionPopupView(state: state)
+        .padding()
+}

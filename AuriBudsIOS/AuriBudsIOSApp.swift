@@ -15,3 +15,7 @@ struct AuriBudsIOSApp: App {
         }
     }
 }
+
+#Preview {
+    ContentView()
+}

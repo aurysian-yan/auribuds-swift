@@ -5,6 +5,7 @@ struct SettingsPageView: View {
 #if DEBUG
     @ObservedObject var testDeviceStore: DebugTestDeviceStore
 #endif
+    @AppStorage(AuriBudsPreferenceKey.showsUnavailableDevices) private var showsUnavailableDevices = true
 
     private var devices: [PairedDevice] {
 #if DEBUG
@@ -20,6 +21,9 @@ struct SettingsPageView: View {
                 ForEach(devices) { device in
                     DeviceSettingsRow(device: device)
                 }
+            }
+            Section("侧边栏") {
+                Toggle("显示不可连接设备", isOn: $showsUnavailableDevices)
             }
 #if DEBUG
             Section("样例设备") {
@@ -118,9 +122,11 @@ private struct DeviceSettingsRow: View {
                     Text(device.displayName)
                         .font(.headline)
 
-                    Text(device.lastConnectedText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if device.isAppControllable {
+                        Text(device.lastConnectedText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -133,7 +139,7 @@ private struct DeviceSettingsRow: View {
                             .tag(imageName)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
                 .onChange(of: selectedImageName) { _, imageName in
                     DeviceImageProvider.shared.setSelectedImageName(imageName, for: device.id)
                 }
@@ -231,6 +237,26 @@ private extension Bundle {
         }
         return nil
     }
+}
+
+private struct SettingsPagePreview: View {
+    var body: some View {
+        Group {
+#if DEBUG
+            SettingsPageView(
+                viewModel: EarbudsViewModel(),
+                testDeviceStore: DebugTestDeviceStore.shared
+            )
+#else
+            SettingsPageView(viewModel: EarbudsViewModel())
+#endif
+        }
+        .frame(width: 420, height: 640)
+    }
+}
+
+#Preview("设置") {
+    SettingsPagePreview()
 }
 
 #Preview {

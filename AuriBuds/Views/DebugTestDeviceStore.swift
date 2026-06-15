@@ -173,4 +173,38 @@ extension EarbudsViewModel {
         return pairedDevices + testDevices.map(\.pairedDevice)
     }
 }
+
+private struct DebugTestDeviceStorePreview: View {
+    @ObservedObject private var store = DebugTestDeviceStore.shared
+
+    var body: some View {
+        List {
+            Section("样例设备") {
+                ForEach(store.supportedOptions.prefix(6)) { option in
+                    HStack(spacing: 12) {
+                        DeviceImageView(
+                            imageName: option.imageName,
+                            fallbackSystemName: "headphones",
+                            size: CGSize(width: 36, height: 36)
+                        )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(option.displayName)
+                                .font(.headline)
+
+                            Text(option.colorTitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(width: 360, height: 420)
+    }
+}
+
+#Preview {
+    DebugTestDeviceStorePreview()
+}
 #endif

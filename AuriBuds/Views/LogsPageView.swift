@@ -75,3 +75,8 @@ struct LogsPageView: View {
         NSPasteboard.general.setString(viewModel.debugEvents.joined(separator: "\n"), forType: .string)
     }
 }
+
+#Preview {
+    LogsPageView(viewModel: EarbudsViewModel())
+        .frame(width: 420, height: 560)
+}

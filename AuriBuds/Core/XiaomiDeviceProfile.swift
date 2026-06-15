@@ -41,6 +41,10 @@ struct XiaomiDeviceProfile: Equatable {
     static func isLikelyXiaomiAudioDevice(_ deviceName: String) -> Bool {
         let normalizedName = normalized(deviceName)
 
+        if ["watch", "band", "bracelet"].contains(where: { normalizedName.contains($0) }) {
+            return false
+        }
+
         let brandMatched = [
             "xiaomi",
             "redmi",

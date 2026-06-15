@@ -67,7 +67,8 @@ struct MenuBarContentView: View {
                     }
 
                     Text(viewModel.state.deviceName)
-                        .font(.largeTitle)
+                        .font(.system(size: 32, weight: .medium))
+                        .fontWidth(.condensed)
                         .lineLimit(2)
                 }
             }
