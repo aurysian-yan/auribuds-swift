@@ -255,6 +255,10 @@ private struct DeviceSidebarRow: View {
             .fill(statusDotColor)
             .frame(width: 6, height: 6)
             .opacity(shouldBlinkStatusDot ? (blinkStatusDot ? 0.25 : 1.0) : 1.0)
+            .animation(
+                shouldBlinkStatusDot ? .easeInOut(duration: 0.7).repeatForever(autoreverses: true) : nil,
+                value: blinkStatusDot
+            )
             .onAppear {
                 updateBlinking(isBlinking: shouldBlinkStatusDot)
             }
@@ -286,12 +290,6 @@ private struct DeviceSidebarRow: View {
     }
 
     private func updateBlinking(isBlinking: Bool) {
-        blinkStatusDot = false
-
-        if isBlinking {
-            withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
-                blinkStatusDot = true
-            }
-        }
+        blinkStatusDot = isBlinking
     }
 }

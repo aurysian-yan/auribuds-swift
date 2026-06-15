@@ -29,10 +29,12 @@ struct SettingsPageView: View {
             Section("外观") {
                 LabeledContent("主题", value: "跟随系统")
             }
+            Section("关于") {
+                AboutAuriBudsView()
+            }
         }
         .formStyle(.grouped)
-        .padding(.horizontal, 20)
-        .padding(.bottom, 24)
+        .padding(.horizontal, -8)
     }
 }
 
@@ -141,4 +143,96 @@ private struct DeviceSettingsRow: View {
         }
         .padding(.vertical, 6)
     }
+}
+
+struct AboutAuriBudsView: View {
+    private let appName = Bundle.main.displayName
+    private let versionText = Bundle.main.versionDisplayText
+    var body: some View {
+        VStack(spacing: 18) {
+            AppIconView(size: 96)
+            VStack(spacing: 6) {
+                Text(appName)
+                    .font(.system(size: 24, weight: .semibold))
+                    .lineLimit(1)
+                Text(versionText)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+            Divider()
+                .padding(.vertical, 2)
+            VStack(spacing: 6) {
+                Text("Multi-brand earbuds control for macOS")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Text("© 2026 Aurysian Yan")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 34)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct AppIconView: View {
+    let size: CGFloat
+    var body: some View {
+        if let image = Bundle.main.bestAppIconImage {
+            Image(nsImage: image)
+                .resizable()
+                .interpolation(.high)
+                .antialiased(true)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: size, height: size)
+                .accessibilityHidden(true)
+        } else {
+            RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                .fill(.quaternary)
+                .overlay {
+                    Image(systemName: "earbuds")
+                        .font(.system(size: size * 0.42, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: size, height: size)
+                .accessibilityHidden(true)
+        }
+    }
+}
+
+private extension Bundle {
+    var displayName: String {
+        object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? "AuriBuds"
+    }
+    var versionDisplayText: String {
+        let version = object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "1.0"
+        let build = object(forInfoDictionaryKey: "CFBundleVersion") as? String
+            ?? "1"
+        return "Version \(version) (\(build))"
+    }
+    var bestAppIconImage: NSImage? {
+        if let runtimeIcon = NSApp.applicationIconImage {
+            return runtimeIcon
+        }
+        if let iconName = object(forInfoDictionaryKey: "CFBundleIconName") as? String,
+           let iconImage = NSImage(named: iconName) {
+            return iconImage
+        }
+        if let iconFile = object(forInfoDictionaryKey: "CFBundleIconFile") as? String {
+            let name = iconFile.replacingOccurrences(of: ".icns", with: "")
+            if let iconImage = NSImage(named: name) {
+                return iconImage
+            }
+        }
+        return nil
+    }
+}
+
+#Preview {
+    AboutAuriBudsView()
 }

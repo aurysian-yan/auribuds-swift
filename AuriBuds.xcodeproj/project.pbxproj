@@ -8,14 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		93F49BA12FDEE3DF00F9B619 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 93F49BA02FDEE3DF00F9B619 /* AppIcon.icon */; };
-		93F49BA32FDF000100F9B619 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93F49BA22FDF000100F9B619 /* CoreBluetooth.framework */; };
 		AA1000010000000000000001 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1000020000000000000001 /* IOBluetooth.framework */; };
+		AA1000010000000000000002 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1000020000000000000002 /* CoreBluetooth.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		93F49BA02FDEE3DF00F9B619 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
-		93F49BA22FDF000100F9B619 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		AA1000020000000000000001 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
+		AA1000020000000000000002 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		AA1000030000000000000001 /* AuriBuds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AuriBuds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -34,6 +34,7 @@
 			files = (
 				93F49BA32FDF000100F9B619 /* CoreBluetooth.framework in Frameworks */,
 				AA1000010000000000000001 /* IOBluetooth.framework in Frameworks */,
+				AA1000010000000000000002 /* CoreBluetooth.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +47,7 @@
 				AA1000040000000000000001 /* AuriBuds */,
 				AA1000070000000000000001 /* Frameworks */,
 				AA1000080000000000000001 /* Products */,
+				93F49C602FDFFBB500F9B619 /* AppIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -54,7 +56,7 @@
 			children = (
 				93F49BA22FDF000100F9B619 /* CoreBluetooth.framework */,
 				AA1000020000000000000001 /* IOBluetooth.framework */,
-				93F49BA02FDEE3DF00F9B619 /* AppIcon.icon */,
+				AA1000020000000000000002 /* CoreBluetooth.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -131,7 +133,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				93F49BA12FDEE3DF00F9B619 /* AppIcon.icon in Resources */,
+				93F49C612FDFFBB500F9B619 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -263,6 +265,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = AuriBuds/AuriBuds.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -290,6 +293,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = AuriBuds/AuriBuds.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

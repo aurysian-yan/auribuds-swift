@@ -88,9 +88,9 @@ final class OppoProtocol {
 }
 
 actor OppoProtocolBackend {
-    private let transport = BluetoothClassicTransport()
+    private let transport = BluetoothHybridTransport()
     private let commandQueue = OppoCommandQueue()
-    private var connection: SafeRfcommConnection?
+    private var connection: OppoTransportConnection?
     private var connectionState: ConnectionState = .disconnected
     private var connectTask: Task<Void, Error>?
     private var activeDeviceName: String?
@@ -494,6 +494,15 @@ actor OppoProtocolBackend {
             }
         }
 
+        if let error = error as? BluetoothLETransportError {
+            switch error {
+            case .notConnected, .writeFailed, .connectionTimeout, .serviceDiscoveryFailed, .characteristicDiscoveryFailed, .writableCharacteristicNotFound:
+                return true
+            case .bluetoothUnavailable, .deviceNotFound:
+                return false
+            }
+        }
+
         if let error = error as? OppoProtocolError, error == .notConnected {
             return true
         }
@@ -509,7 +518,7 @@ actor OppoProtocolBackend {
 actor OppoCommandQueue {
     func execute(
         _ command: OppoCommand,
-        connection: SafeRfcommConnection,
+        connection: OppoTransportConnection,
         onEvent: @escaping (String) -> Void
     ) async throws -> [Data] {
         var attempt = 0

@@ -81,7 +81,7 @@ enum OppoCommands {
         ],
         bytes: buildPacket(command: 0x010C, payload: [0x01, 0x01]),
         expectedResponse: .anc,
-        timeout: 1
+        timeout: 2
     )
 
     static let setTransparency = OppoCommand(
@@ -93,7 +93,7 @@ enum OppoCommands {
         ],
         bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x04]),
         expectedResponse: .anc,
-        timeout: 0.8
+        timeout: 2
     )
 
     static let setANCOff = OppoCommand(
@@ -105,7 +105,7 @@ enum OppoCommands {
         ],
         bytes: buildPacket(command: 0x0404, payload: [0x01, 0x01, 0x01]),
         expectedResponse: .anc,
-        timeout: 0.8
+        timeout: 2
     )
 
     static let setNoiseCancellation = OppoCommand(

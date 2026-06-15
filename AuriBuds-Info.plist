@@ -22,5 +22,7 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>AuriBuds uses Bluetooth to connect to your earphones.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>AuriBuds uses Bluetooth LE to connect to your earphones.</string>
 </dict>
 </plist>
