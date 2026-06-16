@@ -6,8 +6,8 @@ enum BluetoothTransportError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .deviceNotFound(let name):
-            return "No paired Bluetooth device matched: \(name)"
+        case .deviceNotFound:
+            return "未发现设备"
         }
     }
 }

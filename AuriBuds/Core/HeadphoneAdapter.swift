@@ -20,6 +20,7 @@ protocol HeadphoneManaging: AnyObject {
 
     func isBatteryDecodeFailure(_ error: Error) -> Bool
     func isHandshakeFailure(_ error: Error) -> Bool
+    func isDeviceNotFound(_ error: Error) -> Bool
 }
 
 protocol HeadphoneAdapter {
@@ -109,6 +110,18 @@ extension XiaomiProtocol: HeadphoneManaging {
     func isHandshakeFailure(_ error: Error) -> Bool {
         (error as? XiaomiProtocolError) == .handshakeFailed
     }
+
+    func isDeviceNotFound(_ error: Error) -> Bool {
+        if isBluetoothLEDeviceNotFound(error) {
+            return true
+        }
+
+        guard case .allTransportsFailed(let reason) = error as? XiaomiProtocolError else {
+            return false
+        }
+
+        return reason.contains("No BLE device matched") || reason.contains("未发现设备")
+    }
 }
 
 extension OppoProtocol: HeadphoneManaging {
@@ -119,4 +132,41 @@ extension OppoProtocol: HeadphoneManaging {
     func isHandshakeFailure(_ error: Error) -> Bool {
         (error as? OppoProtocolError) == .handshakeFailed
     }
+
+    func isDeviceNotFound(_ error: Error) -> Bool {
+        isBluetoothLEDeviceNotFound(error)
+    }
+}
+
+private func isBluetoothLEDeviceNotFound(_ error: Error) -> Bool {
+    if let error = error as? BluetoothLETransportError {
+        switch error {
+        case .deviceNotFound:
+            return true
+        default:
+            return false
+        }
+    }
+
+    if let error = error as? BluetoothTransportError {
+        switch error {
+        case .deviceNotFound:
+            return true
+        }
+    }
+
+    if let error = error as? XiaomiBLETransportError {
+        switch error {
+        case .deviceNotFound:
+            return true
+        default:
+            return false
+        }
+    }
+
+    let description = error.localizedDescription
+    return description.contains("No BLE device matched")
+        || description.contains("No Xiaomi BLE peripheral matched")
+        || description.contains("No paired Bluetooth device matched")
+        || description.contains("未发现设备")
 }

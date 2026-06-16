@@ -165,9 +165,9 @@ final class EarbudsViewModel: ObservableObject {
         } catch {
             stopBackgroundTasks()
             state.appConnected = false
-            state.connectionStatus = .error
-            state.lastError = error.localizedDescription
-            appendDebugEvent("error \(error.localizedDescription)")
+            state.connectionStatus = connectionFailureStatus(for: error, client: client)
+            state.lastError = connectionFailureMessage(for: error, client: client)
+            appendDebugEvent("error \(state.lastError ?? error.localizedDescription)")
         }
 
         isBusy = false
@@ -207,9 +207,9 @@ final class EarbudsViewModel: ObservableObject {
             appendDebugEvent("error \(error.localizedDescription)")
         } catch {
             state.appConnected = false
-            state.connectionStatus = .error
-            state.lastError = error.localizedDescription
-            appendDebugEvent("error \(error.localizedDescription)")
+            state.connectionStatus = connectionFailureStatus(for: error, client: client)
+            state.lastError = connectionFailureMessage(for: error, client: client)
+            appendDebugEvent("error \(state.lastError ?? error.localizedDescription)")
         }
 
         isWritingANC = false
@@ -387,12 +387,20 @@ final class EarbudsViewModel: ObservableObject {
             appendDebugEvent("error \(error.localizedDescription)")
         } catch {
             state.appConnected = false
-            state.connectionStatus = .error
-            state.lastError = error.localizedDescription
-            appendDebugEvent("error \(error.localizedDescription)")
+            state.connectionStatus = connectionFailureStatus(for: error, client: client)
+            state.lastError = connectionFailureMessage(for: error, client: client)
+            appendDebugEvent("error \(state.lastError ?? error.localizedDescription)")
         }
 
         isBusy = false
+    }
+
+    private func connectionFailureStatus(for error: Error, client: any HeadphoneManaging) -> ConnectionStatus {
+        client.isDeviceNotFound(error) ? .deviceNotFound : .error
+    }
+
+    private func connectionFailureMessage(for error: Error, client: any HeadphoneManaging) -> String {
+        client.isDeviceNotFound(error) ? "未发现设备" : error.localizedDescription
     }
 
     private func refreshANCStatusAfterConnect(device: BluetoothDeviceSnapshot?) async {

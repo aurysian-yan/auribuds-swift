@@ -18,8 +18,8 @@ struct MenuBarContentView: View {
         case .connecting, .handshaking, .reconnecting:
             return .accentColor
 
-        case .error, .handshakeFailed:
-            return .yellow
+        case .error, .handshakeFailed, .deviceNotFound:
+            return Color.white.opacity(0.55)
         }
     }
 
@@ -30,6 +30,10 @@ struct MenuBarContentView: View {
         default:
             return false
         }
+    }
+
+    private var visibleLastError: String? {
+        viewModel.state.connectionStatus == .deviceNotFound ? nil : viewModel.state.lastError
     }
     
     var body: some View {
@@ -123,7 +127,7 @@ struct MenuBarContentView: View {
             .buttonStyle(.borderless)
             .controlSize(.small)
 
-            if let lastError = viewModel.state.lastError {
+            if let lastError = visibleLastError {
                 Text(lastError)
                     .font(.caption)
                     .foregroundStyle(.red)
@@ -141,7 +145,7 @@ struct MenuBarContentView: View {
             return .green
         case .connecting, .handshaking, .reconnecting:
             return .secondary
-        case .error, .handshakeFailed:
+        case .error, .handshakeFailed, .deviceNotFound:
             return .red
         case .disconnected:
             return .secondary

@@ -36,12 +36,16 @@ struct DeviceImageView: View {
     }
 
     private var fallbackImage: some View {
-        Image(systemName: fallbackSystemName)
-            .resizable()
-            .scaledToFit()
-            .symbolRenderingMode(.monochrome)
-            .foregroundStyle(.secondary)
-            .padding(32)
+        GeometryReader { geometry in
+            Image(systemName: fallbackSystemName)
+                .font(.system(
+                    size: min(geometry.size.width, geometry.size.height) * 0.46,
+                    weight: .regular
+                ))
+                .symbolRenderingMode(.monochrome)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 }
 

@@ -15,8 +15,8 @@ enum BluetoothLETransportError: Error, LocalizedError {
         switch self {
         case .bluetoothUnavailable(let reason):
             return "BLE unavailable: \(reason)"
-        case .deviceNotFound(let identifier):
-            return "No BLE device matched: \(identifier)"
+        case .deviceNotFound:
+            return "未发现设备"
         case .connectionTimeout(let identifier):
             return "BLE connection timed out: \(identifier)"
         case .serviceDiscoveryFailed(let reason):

@@ -66,7 +66,8 @@ struct HomePageView: View {
                 if !isUsingLiveDevice ||
                     viewModel.state.connectionStatus == .disconnected ||
                     viewModel.state.connectionStatus == .error ||
-                    viewModel.state.connectionStatus == .handshakeFailed {
+                    viewModel.state.connectionStatus == .handshakeFailed ||
+                    viewModel.state.connectionStatus == .deviceNotFound {
                     Button("连接") {
                         Task {
                             await viewModel.connect()
@@ -143,8 +144,8 @@ struct DeviceOverviewContent: View {
             return .secondary
         case .connecting, .handshaking, .reconnecting:
             return .accentColor
-        case .error, .handshakeFailed:
-            return .yellow
+        case .error, .handshakeFailed, .deviceNotFound:
+            return Color.white.opacity(0.55)
         }
     }
 
@@ -214,7 +215,7 @@ struct DeviceOverviewContent: View {
             DeviceImageView(
                 imageName: displayState.imageName,
                 fallbackSystemName: displayState.fallbackSystemName,
-                maxSize: 468
+                maxSize: 364
             )
             .frame(maxWidth: .infinity, alignment: .center)
             .matchedGeometryEffect(id: "device-image", in: transitionNamespace)

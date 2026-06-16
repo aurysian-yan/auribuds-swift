@@ -14,8 +14,8 @@ enum XiaomiBLETransportError: Error, LocalizedError, Equatable {
         switch self {
         case .bluetoothUnavailable(let reason):
             return "Bluetooth LE unavailable: \(reason)"
-        case .deviceNotFound(let name):
-            return "No Xiaomi BLE peripheral matched: \(name)"
+        case .deviceNotFound:
+            return "未发现设备"
         case .connectTimeout(let name):
             return "BLE connect timed out: \(name)"
         case .serviceNotFound:

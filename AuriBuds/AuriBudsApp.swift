@@ -66,7 +66,7 @@ struct AuriBudsApp: App {
         guard !viewModel.isBusy else { return false }
 
         switch viewModel.state.connectionStatus {
-        case .disconnected, .error, .handshakeFailed:
+        case .disconnected, .error, .handshakeFailed, .deviceNotFound:
             return true
         case .connected, .connecting, .handshaking, .reconnecting:
             return false

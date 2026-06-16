@@ -174,8 +174,8 @@ private struct DeviceSidebarRow: View {
             return .secondary
         case .connecting, .handshaking, .reconnecting:
             return .accentColor
-        case .error, .handshakeFailed:
-            return .yellow
+        case .error, .handshakeFailed, .deviceNotFound:
+            return Color.white.opacity(0.55)
         }
     }
 
@@ -331,7 +331,7 @@ private struct DeviceSidebarRow: View {
         guard device.isAppControllable else { return false }
 
         switch viewModel.state.connectionStatus {
-        case .disconnected, .error, .handshakeFailed:
+        case .disconnected, .error, .handshakeFailed, .deviceNotFound:
             return true
         case .connected, .connecting, .handshaking, .reconnecting:
             return device.id != PairedDevice(state: viewModel.state).id

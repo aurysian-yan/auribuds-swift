@@ -8,6 +8,7 @@ enum ConnectionStatus: String, Equatable {
     case reconnecting = "Reconnecting"
     case error = "Error"
     case handshakeFailed = "Handshake Failed"
+    case deviceNotFound = "Device Not Found"
 
     var localizedTitle: String {
         switch self {
@@ -25,6 +26,8 @@ enum ConnectionStatus: String, Equatable {
             return "连接失败"
         case .handshakeFailed:
             return "握手失败"
+        case .deviceNotFound:
+            return "未发现设备"
         }
     }
 }
