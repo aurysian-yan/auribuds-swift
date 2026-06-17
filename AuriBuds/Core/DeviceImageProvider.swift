@@ -112,6 +112,34 @@ final class DeviceImageProvider {
         imageSet(productId: productId, colorId: colorId, modelName: modelName).primary
     }
 
+    func pairImageName(for state: EarbudsState) -> String? {
+        pairImageName(from: imageSet(for: state))
+    }
+
+    func pairImageName(for snapshot: BluetoothDeviceSnapshot?) -> String? {
+        pairImageName(from: imageSet(for: snapshot))
+    }
+
+    func pairImageName(productId: String? = nil, colorId: String? = nil, modelName: String? = nil) -> String? {
+        pairImageName(from: imageSet(productId: productId, colorId: colorId, modelName: modelName))
+    }
+
+    private func pairImageName(from imageSet: DeviceImageSet) -> String? {
+        guard let primary = imageSet.primary else { return nil }
+        let suffixes = ["_earbuds_with_case", "_open_case", "_closed_case"]
+        for suffix in suffixes {
+            if primary.hasSuffix(suffix) {
+                let prefix = String(primary.dropLast(suffix.count))
+                let pairName = prefix + "_earbuds_pair"
+                if availableImageName(pairName) != nil {
+                    return pairName
+                }
+                break
+            }
+        }
+        return primary
+    }
+
     func availableImageNames(for state: EarbudsState) -> [String] {
         availableImageNames(
             productId: nil,

@@ -72,6 +72,29 @@ final class EarbudsViewModel: ObservableObject {
         }
 
         subscribeToBluetoothMonitor()
+        subscribeToStateChanges()
+    }
+
+    private func subscribeToStateChanges() {
+        $state
+            .dropFirst()
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.persistWidgetData()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func persistWidgetData() {
+        let battery = state.battery
+        WidgetHeadphoneData(
+            deviceName: state.currentDevice?.name ?? state.deviceName,
+            connectionStatus: state.connectionStatus.localizedTitle,
+            batteryLeft: battery.text(for: .left),
+            batteryRight: battery.text(for: .right),
+            batteryCase: battery.text(for: .batteryCase),
+            ancMode: state.ancMode.localizedTitle
+        ).save()
     }
 
     deinit {
@@ -297,7 +320,7 @@ final class EarbudsViewModel: ObservableObject {
             ConnectionPopupWindowController.shared.showConnected(
                 deviceName: snapshot.name,
                 batteryLevel: nil,
-                imageName: DeviceImageProvider.shared.primaryImageName(for: snapshot)
+                imageName: DeviceImageProvider.shared.pairImageName(for: snapshot)
             )
         }
 

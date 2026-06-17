@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  AuriBudsIOS
 //
-//  Created by Aurysian on 2026/6/10.
+//  Created by Aurysian on 2026/6/17.
 //
 
 import SwiftUI

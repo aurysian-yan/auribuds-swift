@@ -81,7 +81,7 @@ final class ConnectionPopupWindowController {
         state.deviceName = deviceName
         state.status = .connected
         state.batteryLevel = batteryLevel
-        state.imageName = imageName ?? DeviceImageProvider.shared.primaryImageName(modelName: deviceName)
+        state.imageName = imageName ?? DeviceImageProvider.shared.pairImageName(modelName: deviceName)
         state.isHiding = false
 
         let screen = screenForPopup()
@@ -241,7 +241,7 @@ final class ConnectionPopupPanel: NSPanel {
     let state = ConnectionPopupState()
     state.deviceName = "OPPO Enco Air4 Pro"
     state.status = .connected
-    state.imageName = DeviceImageProvider.shared.primaryImageName(modelName: state.deviceName)
+    state.imageName = DeviceImageProvider.shared.pairImageName(modelName: state.deviceName)
     state.isPresented = true
 
     return ConnectionPopupView(state: state)
