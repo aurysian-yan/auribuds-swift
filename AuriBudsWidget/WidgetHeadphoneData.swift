@@ -7,6 +7,9 @@ struct WidgetHeadphoneData: Codable {
     let batteryRight: String
     let batteryCase: String
     let ancMode: String
+    let isCaseCharging: Bool
+    let imageName: String?
+    let fallbackSystemName: String
 
     static let appGroupSuite = "group.top.aurysian.auribuds"
     private static let storageKey = "widgetHeadphoneData"
@@ -27,7 +30,10 @@ struct WidgetHeadphoneData: Codable {
                 batteryLeft: "--",
                 batteryRight: "--",
                 batteryCase: "--",
-                ancMode: "关闭"
+                ancMode: "关闭",
+                isCaseCharging: false,
+                imageName: nil,
+                fallbackSystemName: "headphones"
             )
         }
         return decoded

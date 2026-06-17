@@ -81,6 +81,10 @@ private struct MainWindowConfigurator: NSViewRepresentable {
             clampWindowFrame(window)
         }
 
+        func windowWillClose(_ notification: Notification) {
+            NSApp.setActivationPolicy(.accessory)
+        }
+
         func clampWindowFrame(_ window: NSWindow) {
             let currentFrame = window.frame
             let targetSize = clampedSize(currentFrame.size)

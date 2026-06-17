@@ -45,7 +45,10 @@ struct ConnectionPopupView: View {
     }
 
     private var popupImageName: String? {
-        DeviceImageProvider.shared.connectionPopupImageName(for: state.imageName)
+        guard let imageName = state.imageName else { return nil }
+        let provider = DeviceImageProvider.shared
+        return provider.pairImageName(productId: nil, colorId: nil, modelName: state.deviceName)
+            ?? imageName
     }
 
     var body: some View {
@@ -97,96 +100,6 @@ struct ConnectionPopupView: View {
             RoundedRectangle(cornerRadius: 42, style: .continuous)
                 .stroke(.white.opacity(0.2), lineWidth: 1)
         }
-    }
-}
-
-private extension DeviceImageProvider {
-    func connectionPopupImageName(for selectedImageName: String?) -> String? {
-        guard let selectedImageName else {
-            return nil
-        }
-
-        if let earbudsPairImageName = earbudsPairImageName(matching: selectedImageName) {
-            return earbudsPairImageName
-        }
-
-        return NSImage(named: selectedImageName) == nil ? nil : selectedImageName
-    }
-
-    func earbudsPairImageName(matching selectedImageName: String) -> String? {
-        let candidates = earbudsPairCandidates(from: selectedImageName)
-        return candidates.first { NSImage(named: $0) != nil }
-    }
-
-    func earbudsPairCandidates(from imageName: String) -> [String] {
-        var candidates: [String] = []
-
-        func append(_ candidate: String) {
-            guard !candidate.isEmpty, !candidates.contains(candidate) else { return }
-            candidates.append(candidate)
-        }
-
-        append(imageName)
-
-        if imageName.contains("earbuds_pair") || imageName.contains("buds_pair") {
-            return candidates
-        }
-
-        // Asset names follow the pattern:
-        // OPPO Enco Air4 Pro__夜影灰__earbuds_pair_001
-        // Keep the same model + color prefix and prefer the earbuds_pair variant.
-        let doubleUnderscoreParts = imageName.components(separatedBy: "__")
-        if doubleUnderscoreParts.count >= 3 {
-            let prefix = doubleUnderscoreParts.dropLast().joined(separator: "__")
-            let lastComponent = doubleUnderscoreParts.last ?? ""
-            let suffixPattern = #"_\d+$"#
-            let suffixRange = lastComponent.range(of: suffixPattern, options: .regularExpression)
-            let suffix = suffixRange.map { String(lastComponent[$0]) } ?? ""
-
-            append("\(prefix)__earbuds_pair\(suffix)")
-            append("\(prefix)__earbuds_pair_001")
-            append("\(prefix)__buds_pair\(suffix)")
-            append("\(prefix)__buds_pair_001")
-        }
-
-        let replacements = [
-            ("earbuds_pair_001", "earbuds_pair_001"),
-            ("case_open", "earbuds_pair"),
-            ("case_closed", "earbuds_pair"),
-            ("open_case", "earbuds_pair"),
-            ("closed_case", "earbuds_pair"),
-            ("open", "earbuds_pair"),
-            ("closed", "earbuds_pair"),
-            ("case", "earbuds_pair"),
-            ("charging_box", "earbuds_pair"),
-            ("box", "earbuds_pair"),
-            ("product", "earbuds_pair"),
-            ("device", "earbuds_pair"),
-            ("primary", "earbuds_pair"),
-            ("main", "earbuds_pair"),
-            ("render", "earbuds_pair"),
-            ("left_bud", "earbuds_pair"),
-            ("right_bud", "earbuds_pair"),
-            ("left", "earbuds_pair"),
-            ("right", "earbuds_pair")
-        ]
-
-        for (source, replacement) in replacements where imageName.contains(source) {
-            append(imageName.replacingOccurrences(of: source, with: replacement))
-        }
-
-        append("\(imageName)_earbuds_pair")
-
-        let separators: [Character] = ["_", "-"]
-        for separator in separators {
-            let parts = imageName.split(separator: separator)
-            guard parts.count > 1 else { continue }
-
-            let base = parts.dropLast().joined(separator: String(separator))
-            append("\(base)\(separator)earbuds_pair")
-        }
-
-        return candidates
     }
 }
 

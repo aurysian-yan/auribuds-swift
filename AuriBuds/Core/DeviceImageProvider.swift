@@ -6,8 +6,9 @@ struct DeviceImageSet {
     let caseImage: String?
     let leftBud: String?
     let rightBud: String?
+    let pairImage: String?
 
-    static let empty = DeviceImageSet(primary: nil, caseImage: nil, leftBud: nil, rightBud: nil)
+    static let empty = DeviceImageSet(primary: nil, caseImage: nil, leftBud: nil, rightBud: nil, pairImage: nil)
 }
 
 struct DeviceImageDescriptor {
@@ -60,7 +61,8 @@ final class DeviceImageProvider {
             primary: selectedImageName,
             caseImage: selectedImageName,
             leftBud: imageSet.leftBud,
-            rightBud: imageSet.rightBud
+            rightBud: imageSet.rightBud,
+            pairImage: imageSet.pairImage
         )
     }
 
@@ -77,7 +79,8 @@ final class DeviceImageProvider {
             primary: selectedImageName,
             caseImage: selectedImageName,
             leftBud: imageSet.leftBud,
-            rightBud: imageSet.rightBud
+            rightBud: imageSet.rightBud,
+            pairImage: imageSet.pairImage
         )
     }
 
@@ -125,6 +128,9 @@ final class DeviceImageProvider {
     }
 
     private func pairImageName(from imageSet: DeviceImageSet) -> String? {
+        if let pairImage = imageSet.pairImage {
+            return pairImage
+        }
         guard let primary = imageSet.primary else { return nil }
         let suffixes = ["_earbuds_with_case", "_open_case", "_closed_case"]
         for suffix in suffixes {
@@ -254,7 +260,8 @@ final class DeviceImageProvider {
             primary: availableImageName(imageSet.primary),
             caseImage: availableImageName(imageSet.caseImage),
             leftBud: availableImageName(imageSet.leftBud),
-            rightBud: availableImageName(imageSet.rightBud)
+            rightBud: availableImageName(imageSet.rightBud),
+            pairImage: availableImageName(imageSet.pairImage)
         )
     }
 

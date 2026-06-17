@@ -93,7 +93,10 @@ final class EarbudsViewModel: ObservableObject {
             batteryLeft: battery.text(for: .left),
             batteryRight: battery.text(for: .right),
             batteryCase: battery.text(for: .batteryCase),
-            ancMode: state.ancMode.localizedTitle
+            ancMode: state.ancMode.localizedTitle,
+            isCaseCharging: battery.isCharging(.batteryCase),
+            imageName: DeviceImageProvider.shared.primaryImageName(for: state),
+            fallbackSystemName: state.currentDevice?.fallbackSystemName ?? "headphones"
         ).save()
     }
 

@@ -1,5 +1,6 @@
 import Foundation
 
+
 extension DeviceImageDescriptor {
     static let generatedCatalog: [DeviceImageDescriptor] = [
         DeviceImageDescriptor(
@@ -8,10 +9,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4",
             displayTitle: "春绿",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_f7fcdad7c43d_open_case",
-                caseImage: "oppo_device_f7fcdad7c43d_open_case",
+                primary: "oppo_device_enco_air4_spring_green_open_case",
+                caseImage: "oppo_device_enco_air4_spring_green_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4_spring_green_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -20,10 +22,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4",
             displayTitle: "霜白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_608e3e95f9f4_open_case",
-                caseImage: "oppo_device_608e3e95f9f4_open_case",
+                primary: "oppo_device_enco_air4_frost_white_open_case",
+                caseImage: "oppo_device_enco_air4_frost_white_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4_frost_white_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -32,10 +35,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4 Pro",
             displayTitle: "夜影灰",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_ef07e3f00d9c_open_case",
-                caseImage: "oppo_device_56939cb367c9_closed_case",
+                primary: "oppo_device_enco_air4_pro_night_gray_open_case",
+                caseImage: "oppo_device_enco_air4_pro_night_gray_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4_pro_night_gray_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -44,10 +48,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4 Pro",
             displayTitle: "晨曦白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_ea554626d591_open_case",
-                caseImage: "oppo_device_8f80c385fe9b_closed_case",
+                primary: "oppo_device_enco_air4_pro_dawn_white_open_case",
+                caseImage: "oppo_device_enco_air4_pro_dawn_white_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4_pro_dawn_white_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -56,10 +61,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4 新声版",
             displayTitle: "云雾黑",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_d0b2ec4713d5_open_case",
-                caseImage: "oppo_device_d0b2ec4713d5_open_case",
+                primary: "oppo_device_enco_air4_new_mist_black_open_case",
+                caseImage: "oppo_device_enco_air4_new_mist_black_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4_new_mist_black_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -68,10 +74,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4 新声版",
             displayTitle: "冰透绿",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_69f24d3eff69_open_case",
-                caseImage: "oppo_device_874b337c532d_closed_case",
+                primary: "oppo_device_enco_air4_new_ice_green_open_case",
+                caseImage: "oppo_device_enco_air4_new_ice_green_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: nil
             )
         ),
         DeviceImageDescriptor(
@@ -80,10 +87,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4 新声版",
             displayTitle: "排球少年!! 联名耳机",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_7cd5c6a71a4a_open_case",
-                caseImage: "oppo_device_7cd5c6a71a4a_open_case",
+                primary: "oppo_device_enco_air4_new_haikyu_collab_open_case",
+                caseImage: "oppo_device_enco_air4_new_haikyu_collab_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: nil
             )
         ),
         DeviceImageDescriptor(
@@ -92,10 +100,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4 新声版",
             displayTitle: "润玉白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_7c58d545747d_open_case",
-                caseImage: "oppo_device_3137d72a9449_closed_case",
+                primary: "oppo_device_enco_air4_new_jade_white_open_case",
+                caseImage: "oppo_device_enco_air4_new_jade_white_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: nil
             )
         ),
         DeviceImageDescriptor(
@@ -104,10 +113,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4i",
             displayTitle: "玄岩黑",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_31543e4cedae_earbuds_with_case",
-                caseImage: "oppo_device_31543e4cedae_earbuds_with_case",
+                primary: "oppo_device_enco_air4i_obsidian_black_earbuds_with_case",
+                caseImage: "oppo_device_enco_air4i_obsidian_black_earbuds_with_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4i_obsidian_black_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -116,10 +126,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air4i",
             displayTitle: "玉瓷白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_3686ca62678f_earbuds_with_case",
-                caseImage: "oppo_device_3686ca62678f_earbuds_with_case",
+                primary: "oppo_device_enco_air4i_porcelain_white_earbuds_with_case",
+                caseImage: "oppo_device_enco_air4i_porcelain_white_earbuds_with_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air4i_porcelain_white_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -128,10 +139,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5",
             displayTitle: "星釉白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_34bd052fb815_open_case",
-                caseImage: "oppo_device_34bd052fb815_open_case",
+                primary: "oppo_device_enco_air5_star_glaze_white_open_case",
+                caseImage: "oppo_device_enco_air5_star_glaze_white_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air5_star_glaze_white_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -140,10 +152,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5",
             displayTitle: "暮云紫",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_5c40fcd63415_open_case",
-                caseImage: "oppo_device_5c40fcd63415_open_case",
+                primary: "oppo_device_enco_air5_dusk_purple_open_case",
+                caseImage: "oppo_device_enco_air5_dusk_purple_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air5_dusk_purple_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -152,10 +165,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5",
             displayTitle: "玄岩黑",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_b163e9da6b82_open_case",
-                caseImage: "oppo_device_b163e9da6b82_open_case",
+                primary: "oppo_device_enco_air5_obsidian_black_open_case",
+                caseImage: "oppo_device_enco_air5_obsidian_black_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air5_obsidian_black_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -164,10 +178,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5 Pro",
             displayTitle: "月珀白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_ca23e4f67558_open_case",
-                caseImage: "oppo_device_ca23e4f67558_open_case",
+                primary: "oppo_device_enco_air5_pro_moon_amber_white_open_case",
+                caseImage: "oppo_device_enco_air5_pro_moon_amber_white_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air5_pro_moon_amber_white_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -176,10 +191,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5 Pro",
             displayTitle: "雾夜黑",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_d9b370804fb5_open_case",
-                caseImage: "oppo_device_d9b370804fb5_open_case",
+                primary: "oppo_device_enco_air5_pro_fog_night_black_open_case",
+                caseImage: "oppo_device_enco_air5_pro_fog_night_black_open_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_air5_pro_fog_night_black_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -188,10 +204,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5s",
             displayTitle: "星光版 星光紫",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_0df909a777fc_open_case",
-                caseImage: "oppo_device_d58aa03a919a_closed_case",
+                primary: "oppo_device_enco_air5s_starlight_purple_open_case",
+                caseImage: "oppo_device_enco_air5s_starlight_purple_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: nil
             )
         ),
         DeviceImageDescriptor(
@@ -200,10 +217,11 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5s",
             displayTitle: "暗夜黑",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_f3bed37b6373_open_case",
-                caseImage: "oppo_device_8d7667055493_closed_case",
+                primary: "oppo_device_enco_air5s_dark_night_black_open_case",
+                caseImage: "oppo_device_enco_air5s_dark_night_black_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: nil
             )
         ),
         DeviceImageDescriptor(
@@ -212,10 +230,115 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco Air5s",
             displayTitle: "月光白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_2a6edf1811b4_open_case",
-                caseImage: "oppo_device_cec442f0be18_closed_case",
+                primary: "oppo_device_enco_air5s_moonlight_white_open_case",
+                caseImage: "oppo_device_enco_air5s_moonlight_white_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: nil
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco Clip2 开放式耳机",
+            colorId: "深空灰",
+            modelName: "OPPO Enco Clip2 开放式耳机",
+            displayTitle: "深空灰",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_clip2_deep_space_gray_open_case",
+                caseImage: "oppo_device_enco_clip2_deep_space_gray_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_clip2_deep_space_gray_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco Clip2 开放式耳机",
+            colorId: "高光金",
+            modelName: "OPPO Enco Clip2 开放式耳机",
+            displayTitle: "高光金",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_clip2_highlight_gold_open_case",
+                caseImage: "oppo_device_enco_clip2_highlight_gold_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_clip2_highlight_gold_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco Free4",
+            colorId: "丹拿版 星瀚银",
+            modelName: "OPPO Enco Free4",
+            displayTitle: "丹拿版 星瀚银",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_free4_dynaudio_star_silver_open_case",
+                caseImage: "oppo_device_enco_free4_dynaudio_star_silver_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_free4_dynaudio_star_silver_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco Free4",
+            colorId: "水漾蓝",
+            modelName: "OPPO Enco Free4",
+            displayTitle: "水漾蓝",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_free4_water_blue_open_case",
+                caseImage: "oppo_device_enco_free4_water_blue_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_free4_water_blue_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco Free4",
+            colorId: "珠光白",
+            modelName: "OPPO Enco Free4",
+            displayTitle: "珠光白",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_free4_pearl_white_open_case",
+                caseImage: "oppo_device_enco_free4_pearl_white_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_free4_pearl_white_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco R3 Pro",
+            colorId: "星闪白",
+            modelName: "OPPO Enco R3 Pro",
+            displayTitle: "星闪白",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_r3_pro_star_flash_white_open_case",
+                caseImage: "oppo_device_enco_r3_pro_star_flash_white_open_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_r3_pro_star_flash_white_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco R4",
+            colorId: "云雾白",
+            modelName: "OPPO Enco R4",
+            displayTitle: "云雾白",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_r4_mist_white_open_case",
+                caseImage: "oppo_device_enco_r4_mist_white_open_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_r4_mist_white_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco R5",
+            colorId: "霜月白",
+            modelName: "OPPO Enco R5",
+            displayTitle: "霜月白",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_r5_frost_moon_white_open_case",
+                caseImage: "oppo_device_enco_r5_frost_moon_white_open_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_r5_frost_moon_white_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -224,10 +347,102 @@ extension DeviceImageDescriptor {
             modelName: "OPPO Enco X3",
             displayTitle: "米白",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_x3_white_open_case",
-                caseImage: "oppo_device_x3_white_open_case",
+                primary: "oppo_device_enco_x3_cream_white_open_case",
+                caseImage: "oppo_device_enco_x3_cream_white_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_enco_x3_cream_white_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "OPPO Enco X3",
+            colorId: "雅黑",
+            modelName: "OPPO Enco X3",
+            displayTitle: "雅黑",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_enco_x3_elegant_black_open_case",
+                caseImage: "oppo_device_enco_x3_elegant_black_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_enco_x3_elegant_black_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds 3V",
+            colorId: "晨雾蓝",
+            modelName: "一加 Buds 3V",
+            displayTitle: "晨雾蓝",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_3v_morning_mist_blue_open_case",
+                caseImage: "oppo_device_oneplus_buds_3v_morning_mist_blue_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_3v_morning_mist_blue_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds 3V",
+            colorId: "极夜黑",
+            modelName: "一加 Buds 3V",
+            displayTitle: "极夜黑",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_3v_polar_night_black_open_case",
+                caseImage: "oppo_device_oneplus_buds_3v_polar_night_black_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_3v_polar_night_black_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds 4",
+            colorId: "松影绿",
+            modelName: "一加 Buds 4",
+            displayTitle: "松影绿",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_4_pine_green_open_case",
+                caseImage: "oppo_device_oneplus_buds_4_pine_green_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_4_pine_green_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds 4",
+            colorId: "深空灰",
+            modelName: "一加 Buds 4",
+            displayTitle: "深空灰",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_4_deep_space_gray_open_case",
+                caseImage: "oppo_device_oneplus_buds_4_deep_space_gray_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_4_deep_space_gray_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds Ace 2",
+            colorId: "潜航黑",
+            modelName: "一加 Buds Ace 2",
+            displayTitle: "潜航黑",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_ace2_deep_sea_black_open_case",
+                caseImage: "oppo_device_oneplus_buds_ace2_deep_sea_black_open_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_ace2_deep_sea_black_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds Ace 2",
+            colorId: "瞬影青",
+            modelName: "一加 Buds Ace 2",
+            displayTitle: "瞬影青",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_ace2_flash_cyan_open_case",
+                caseImage: "oppo_device_oneplus_buds_ace2_flash_cyan_open_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_ace2_flash_cyan_earbuds_pair"
             )
         ),
         DeviceImageDescriptor(
@@ -236,10 +451,24 @@ extension DeviceImageDescriptor {
             modelName: "一加 Buds Ace 3",
             displayTitle: "星际黑",
             imageSet: DeviceImageSet(
-                primary: "oppo_device_oneplus_buds_ace3_black_open_case",
-                caseImage: "oppo_device_oneplus_buds_ace3_black_open_case",
+                primary: "oppo_device_oneplus_buds_ace3_interstellar_black_open_case",
+                caseImage: "oppo_device_oneplus_buds_ace3_interstellar_black_closed_case",
                 leftBud: nil,
-                rightBud: nil
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_ace3_interstellar_black_earbuds_pair"
+            )
+        ),
+        DeviceImageDescriptor(
+            productId: "一加 Buds Ace 3",
+            colorId: "钛空银",
+            modelName: "一加 Buds Ace 3",
+            displayTitle: "钛空银",
+            imageSet: DeviceImageSet(
+                primary: "oppo_device_oneplus_buds_ace3_titanium_silver_open_case",
+                caseImage: "oppo_device_oneplus_buds_ace3_titanium_silver_closed_case",
+                leftBud: nil,
+                rightBud: nil,
+                pairImage: "oppo_device_oneplus_buds_ace3_titanium_silver_earbuds_pair"
             )
         ),
     ]

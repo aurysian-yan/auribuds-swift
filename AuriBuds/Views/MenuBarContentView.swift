@@ -121,8 +121,9 @@ struct MenuBarContentView: View {
 
             Divider()
             Button("打开主窗口") {
+                NSApp.setActivationPolicy(.regular)
                 openWindow(id: "main")
-                NSApplication.shared.activate(ignoringOtherApps: true)
+                NSApp.activate(ignoringOtherApps: true)
             }
             .buttonStyle(.borderless)
             .controlSize(.small)
