@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9345E1062FE2C5B900DC79D9"
-               BuildableName = "AuriBudsIOS.app"
+               BuildableName = "AuriBuds.app"
                ReferencedContainer = "container:AuriBuds.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9345E1062FE2C5B900DC79D9"
-            BuildableName = "AuriBudsIOS.app"
+            BuildableName = "AuriBuds.app"
             ReferencedContainer = "container:AuriBuds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -61,7 +61,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9345E1062FE2C5B900DC79D9"
-            BuildableName = "AuriBudsIOS.app"
+            BuildableName = "AuriBuds.app"
             ReferencedContainer = "container:AuriBuds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

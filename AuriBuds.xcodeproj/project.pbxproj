@@ -16,9 +16,10 @@
 		9345E1002FE2C59800DC79D9 /* AuriBudsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0F82FE2C59800DC79D9 /* AuriBudsWidget.swift */; };
 		9345E1012FE2C59800DC79D9 /* AuriBudsWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0F92FE2C59800DC79D9 /* AuriBudsWidgetBundle.swift */; };
 		9345E1022FE2C59800DC79D9 /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0F62FE2C59800DC79D9 /* AppIntent.swift */; };
+		9345E69B2FE43F3100DC79D9 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9345E69A2FE43F3100DC79D9 /* AppIcon.icon */; };
+		9345E69C2FE43F3100DC79D9 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9345E69A2FE43F3100DC79D9 /* AppIcon.icon */; };
 		93F49AF72FE2C5B900AE665 /* WidgetHeadphoneData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F49AF62FE2C5B900AE665 /* WidgetHeadphoneData.swift */; };
 		93F49AF92FE2C5B900AE665 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93F49AF82FE2C5B900AE665 /* CoreBluetooth.framework */; };
-		93F49DE12FE1781500F9B619 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 93F49DE02FE1781500F9B619 /* AppIcon.icon */; };
 		AA1000010000000000000001 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1000020000000000000001 /* IOBluetooth.framework */; };
 		AA1000010000000000000002 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1000020000000000000002 /* CoreBluetooth.framework */; };
 /* End PBXBuildFile section */
@@ -58,9 +59,9 @@
 		9345E0FA2FE2C59800DC79D9 /* AuriBudsWidgetControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuriBudsWidgetControl.swift; sourceTree = "<group>"; };
 		9345E0FB2FE2C59800DC79D9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9345E1072FE2C5B900DC79D9 /* AuriBudsIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AuriBudsIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9345E69A2FE43F3100DC79D9 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		93F49AF62FE2C5B900AE665 /* WidgetHeadphoneData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHeadphoneData.swift; sourceTree = "<group>"; };
 		93F49AF82FE2C5B900AE665 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/CoreBluetooth.framework; sourceTree = DEVELOPER_DIR; };
-		93F49DE02FE1781500F9B619 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		AA1000020000000000000001 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
 		AA1000020000000000000002 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		AA1000030000000000000001 /* AuriBuds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AuriBuds.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -130,8 +131,8 @@
 				9345E1082FE2C5B900DC79D9 /* AuriBudsIOS */,
 				AA1000070000000000000001 /* Frameworks */,
 				AA1000080000000000000001 /* Products */,
-				93F49DE02FE1781500F9B619 /* AppIcon.icon */,
 				9345E0FC2FE2C59800DC79D9 /* AuriBudsWidget */,
+				9345E69A2FE43F3100DC79D9 /* AppIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -282,6 +283,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9345E69B2FE43F3100DC79D9 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,7 +291,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				93F49DE12FE1781500F9B619 /* AppIcon.icon in Resources */,
+				9345E69C2FE43F3100DC79D9 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -427,6 +429,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_CFBundleDisplayName = AuriBuds;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -437,7 +440,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = top.aurysian.auribuds.AuriBudsIOS;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = AuriBuds;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -469,6 +472,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_CFBundleDisplayName = AuriBuds;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -479,7 +483,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = top.aurysian.auribuds.AuriBudsIOS;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = AuriBuds;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
