@@ -5,6 +5,7 @@ import Foundation
 import IOBluetooth
 #endif
 
+@MainActor
 final class BluetoothMonitor: NSObject, ObservableObject {
     static let shared = BluetoothMonitor()
     private static let xiaomiServiceUUID = CBUUID(string: "0000AF00-0000-1000-8000-00805F9B34FB")

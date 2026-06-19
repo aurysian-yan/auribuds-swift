@@ -91,9 +91,7 @@ actor OppoProtocolBackend {
 #if os(macOS)
     private let transport = BluetoothHybridTransport()
 #else
-    private let transport: BluetoothLETransport = {
-        MainActor.assumeIsolated { BluetoothLETransport() }
-    }()
+    private let transport = BluetoothLETransport()
 #endif
     private let commandQueue = OppoCommandQueue()
     private var connection: OppoTransportConnection?
