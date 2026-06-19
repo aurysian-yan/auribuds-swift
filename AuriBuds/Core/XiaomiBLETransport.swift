@@ -183,7 +183,12 @@ final class XiaomiBLETransport: NSObject, @unchecked Sendable {
         default:
             try await withCheckedThrowingContinuation { continuation in
                 DispatchQueue.main.async { [weak self] in
-                    self?.stateContinuation = continuation
+                    guard let self else { return }
+                    if self.central.state == .poweredOn {
+                        continuation.resume()
+                        return
+                    }
+                    self.stateContinuation = continuation
                     Task { [weak self] in
                         try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
                         await MainActor.run {
