@@ -12,6 +12,7 @@
   <img
     alt="AuriBuds App Icon"
     src="./assets/default-image.png"
+    width="456"
   >
 </picture>
 
