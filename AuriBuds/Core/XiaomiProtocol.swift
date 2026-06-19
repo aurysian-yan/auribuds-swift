@@ -243,6 +243,9 @@ actor XiaomiProtocolBackend {
             failures.append("BLE: \(error.localizedDescription)")
             emit("xiaomi BLE failed \(error.localizedDescription)")
             bleTransport.disconnect()
+#if !os(macOS)
+            throw error
+#endif
         }
 
 #if os(macOS)

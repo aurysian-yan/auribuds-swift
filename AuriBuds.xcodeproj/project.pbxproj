@@ -58,7 +58,7 @@
 		9345E0F92FE2C59800DC79D9 /* AuriBudsWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuriBudsWidgetBundle.swift; sourceTree = "<group>"; };
 		9345E0FA2FE2C59800DC79D9 /* AuriBudsWidgetControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuriBudsWidgetControl.swift; sourceTree = "<group>"; };
 		9345E0FB2FE2C59800DC79D9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9345E1072FE2C5B900DC79D9 /* AuriBudsIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AuriBudsIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9345E1072FE2C5B900DC79D9 /* AuriBudsIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = AuriBudsIOS.app; path = AuriBuds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9345E69A2FE43F3100DC79D9 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		93F49AF62FE2C5B900AE665 /* WidgetHeadphoneData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHeadphoneData.swift; sourceTree = "<group>"; };
 		93F49AF82FE2C5B900AE665 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/CoreBluetooth.framework; sourceTree = DEVELOPER_DIR; };
@@ -425,11 +425,12 @@
 					"$(inherited)",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AuriBuds;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "AuriBuds uses Bluetooth to discover and control nearby earbuds.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
-				INFOPLIST_KEY_CFBundleDisplayName = AuriBuds;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -468,11 +469,12 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AuriBuds;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "AuriBuds uses Bluetooth to discover and control nearby earbuds.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = "";
-				INFOPLIST_KEY_CFBundleDisplayName = AuriBuds;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;

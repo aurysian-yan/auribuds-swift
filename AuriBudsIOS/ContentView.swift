@@ -25,6 +25,10 @@ struct ContentView: View {
                 }
 
                 Section {
+                    NavigationLink(value: MainWindowPage.findDevices) {
+                        Label("查找设备", systemImage: "magnifyingglass")
+                    }
+
                     NavigationLink(value: MainWindowPage.logs) {
                         Label {
                             HStack {
@@ -144,6 +148,8 @@ struct ContentView: View {
 #endif
         case .logs:
             LogsPageView(viewModel: viewModel)
+        case .findDevices:
+            FindDeviceView(viewModel: viewModel)
         case .settings:
 #if DEBUG
             SettingsPageView(viewModel: viewModel, testDeviceStore: testDeviceStore)
@@ -159,6 +165,8 @@ struct ContentView: View {
             return ""
         case .device(let id):
             return devices.first { $0.id == id }?.displayName ?? currentDevice.displayName
+        case .findDevices:
+            return "查找设备"
         case .logs:
             return "日志"
         case .settings:

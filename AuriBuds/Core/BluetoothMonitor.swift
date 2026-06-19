@@ -7,10 +7,12 @@ import IOBluetooth
 
 final class BluetoothMonitor: NSObject, ObservableObject {
     static let shared = BluetoothMonitor()
+    private static let xiaomiServiceUUID = CBUUID(string: "0000AF00-0000-1000-8000-00805F9B34FB")
 
     @Published private(set) var lastConnectedDevice: BluetoothDeviceSnapshot?
     @Published private(set) var lastDisconnectedDevice: BluetoothDeviceSnapshot?
     @Published private(set) var availableDevices: [BluetoothDeviceSnapshot] = []
+    @Published private(set) var isScanning = false
 
 #if os(macOS)
     private var connectNotification: IOBluetoothUserNotification?
@@ -52,7 +54,7 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         disconnectNotifications.removeAll()
         classicSnapshots.removeAll()
 #endif
-        bleCentral.stopScan()
+        stopBLEScan()
         bleSnapshots.removeAll()
         isStarted = false
     }
@@ -146,24 +148,81 @@ final class BluetoothMonitor: NSObject, ObservableObject {
     }
 #endif
 
+    func rescan() {
+        stopBLEScan()
+        startBLEScanIfPossible()
+    }
+
     private func startBLEScanIfPossible() {
-        guard isStarted, bleCentral.state == .poweredOn, !bleCentral.isScanning else { return }
+        guard isStarted, bleCentral.state == .poweredOn, !bleCentral.isScanning else {
+            isScanning = bleCentral.isScanning
+            return
+        }
+        refreshConnectedBLEDevices()
         bleCentral.scanForPeripherals(
             withServices: nil,
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
+        isScanning = true
+    }
+
+    private func stopBLEScan() {
+        bleCentral.stopScan()
+        isScanning = false
+    }
+
+    private func refreshConnectedBLEDevices() {
+        let connectedXiaomiDevices = bleCentral.retrieveConnectedPeripherals(
+            withServices: [Self.xiaomiServiceUUID]
+        )
+
+        for peripheral in connectedXiaomiDevices {
+            guard let name = peripheral.name,
+                  XiaomiDeviceProfile.isLikelyXiaomiAudioDevice(name) else { continue }
+
+            let snapshot = snapshot(for: peripheral, name: name, isConnected: true)
+            bleSnapshots[snapshot.id] = snapshot
+        }
+
+        publishAvailableDevices()
     }
 
     private func snapshot(for peripheral: CBPeripheral, advertisementData: [String: Any]) -> BluetoothDeviceSnapshot {
         let advertisedName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
-        return BluetoothDeviceSnapshot(
+        return snapshot(
+            for: peripheral,
             name: advertisedName ?? peripheral.name ?? "BLE Device",
+            isConnected: peripheral.state == .connected
+        )
+    }
+
+    private func snapshot(for peripheral: CBPeripheral, name: String, isConnected: Bool) -> BluetoothDeviceSnapshot {
+        return BluetoothDeviceSnapshot(
+            name: name,
             address: peripheral.identifier.uuidString.uppercased(),
-            isConnected: peripheral.state == .connected,
+            isConnected: isConnected,
             timestamp: Date(),
             majorDeviceClass: 4,
             minorDeviceClass: 1
         )
+    }
+
+    private func isSupportedBLEDevice(peripheral: CBPeripheral, advertisementData: [String: Any]) -> Bool {
+        let advertisedName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
+        let name = advertisedName ?? peripheral.name ?? ""
+
+        if OppoDeviceProfile.isLikelyOppoAudioDevice(name) {
+            return true
+        }
+
+        guard XiaomiDeviceProfile.isLikelyXiaomiAudioDevice(name) else { return false }
+        return advertisedServiceUUIDs(from: advertisementData).contains(Self.xiaomiServiceUUID)
+    }
+
+    private func advertisedServiceUUIDs(from advertisementData: [String: Any]) -> [CBUUID] {
+        let serviceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
+        let overflowServiceUUIDs = advertisementData[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID] ?? []
+        return serviceUUIDs + overflowServiceUUIDs
     }
 
     private func normalizedAddress(_ address: String?) -> String {
@@ -176,6 +235,7 @@ extension BluetoothMonitor: CBCentralManagerDelegate {
         if central.state == .poweredOn {
             startBLEScanIfPossible()
         } else {
+            isScanning = false
             bleSnapshots.removeAll()
             publishAvailableDevices()
         }
@@ -187,8 +247,8 @@ extension BluetoothMonitor: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        guard isSupportedBLEDevice(peripheral: peripheral, advertisementData: advertisementData) else { return }
         let snapshot = snapshot(for: peripheral, advertisementData: advertisementData)
-        guard HeadphoneAdapterRegistry.shared.canControl(snapshot) else { return }
         bleSnapshots[snapshot.id] = snapshot
         publishAvailableDevices()
     }
