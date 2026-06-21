@@ -45,10 +45,6 @@ final class HeadphoneAdapterRegistry {
         self.adapters = adapters
     }
 
-    var defaultAdapter: any HeadphoneAdapter {
-        adapters[0]
-    }
-
     func adapter(for snapshot: BluetoothDeviceSnapshot) -> (any HeadphoneAdapter)? {
         adapter(forDeviceName: snapshot.name)
     }
@@ -65,8 +61,11 @@ final class HeadphoneAdapterRegistry {
         adapter(forDeviceName: deviceName) != nil
     }
 
-    func profile(for deviceName: String) -> HeadphoneAdapterProfile {
-        (adapter(forDeviceName: deviceName) ?? defaultAdapter).profile(for: deviceName)
+    func profile(for deviceName: String) -> HeadphoneAdapterProfile? {
+        guard let adapter = adapter(forDeviceName: deviceName) else {
+            return nil
+        }
+        return adapter.profile(for: deviceName)
     }
 }
 

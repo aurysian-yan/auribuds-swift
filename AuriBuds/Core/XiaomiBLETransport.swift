@@ -123,6 +123,10 @@ final class XiaomiBLETransport: NSObject, @unchecked Sendable {
         onEvent: @escaping (String) -> Void
     ) async throws -> XiaomiBLEConnection {
         self.onEvent = onEvent
+        let normalizedName = XiaomiDeviceProfile.normalized(deviceName)
+        guard !normalizedName.isEmpty else {
+            throw XiaomiBLETransportError.deviceNotFound(deviceName)
+        }
         try await waitUntilPoweredOn(timeout: min(timeout, 4))
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -130,7 +134,7 @@ final class XiaomiBLETransport: NSObject, @unchecked Sendable {
                 guard let self else { return }
                 self.connectContinuation = continuation
                 self.targetName = deviceName
-                self.normalizedTargetName = XiaomiDeviceProfile.normalized(deviceName)
+                self.normalizedTargetName = normalizedName
                 self.writeCharacteristic = nil
                 self.activeConnection = nil
                 self.emit("ble scan start \(deviceName)")

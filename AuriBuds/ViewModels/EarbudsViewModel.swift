@@ -54,9 +54,9 @@ final class EarbudsViewModel: ObservableObject {
     }
 
     init(headphoneManager: (any HeadphoneManaging)? = nil) {
-        let defaultAdapter = HeadphoneAdapterRegistry.shared.defaultAdapter
-        self.headphoneManager = headphoneManager ?? defaultAdapter.makeManager()
-        self.activeAdapterID = headphoneManager == nil ? defaultAdapter.id : "injected"
+        let placeholderAdapter = OppoHeadphoneAdapter()
+        self.headphoneManager = headphoneManager ?? placeholderAdapter.makeManager()
+        self.activeAdapterID = headphoneManager == nil ? placeholderAdapter.id : "injected"
         knownDeviceAddresses = Set(UserDefaults.standard.stringArray(forKey: knownDeviceAddressesKey) ?? [])
 
         configureEventHandler()
@@ -114,8 +114,12 @@ final class EarbudsViewModel: ObservableObject {
         guard !hasStarted else { return }
         hasStarted = true
 
-        Task {
-            await connect(isAutomatic: true)
+        if let connectedDevice = BluetoothMonitor.shared.availableDevices.first(where: {
+            $0.isConnected && isTargetDevice($0)
+        }) {
+            Task {
+                await connect(isAutomatic: true, snapshot: connectedDevice)
+            }
         }
     }
 
@@ -268,11 +272,19 @@ final class EarbudsViewModel: ObservableObject {
     }
 
     private func selectAdapter(for snapshot: BluetoothDeviceSnapshot) async {
-        await selectAdapter(adapterRegistry.adapter(for: snapshot) ?? adapterRegistry.defaultAdapter)
+        guard let adapter = adapterRegistry.adapter(for: snapshot) else {
+            appendDebugEvent("no adapter matches device \(snapshot.name)")
+            return
+        }
+        await selectAdapter(adapter)
     }
 
     private func selectAdapter(forDeviceName deviceName: String) async {
-        await selectAdapter(adapterRegistry.adapter(forDeviceName: deviceName) ?? adapterRegistry.defaultAdapter)
+        guard let adapter = adapterRegistry.adapter(forDeviceName: deviceName) else {
+            appendDebugEvent("no adapter matches device name \(deviceName)")
+            return
+        }
+        await selectAdapter(adapter)
     }
 
     private func selectAdapter(_ adapter: any HeadphoneAdapter) async {
@@ -366,6 +378,12 @@ final class EarbudsViewModel: ObservableObject {
             await selectAdapter(for: snapshot)
         } else {
             await selectAdapter(forDeviceName: state.deviceName)
+        }
+
+        let targetDeviceName = snapshot?.name ?? state.deviceName
+        guard adapterRegistry.canControl(deviceName: targetDeviceName) else {
+            appendDebugEvent("no adapter matches \(targetDeviceName), abort connect")
+            return
         }
 
         if let snapshot,

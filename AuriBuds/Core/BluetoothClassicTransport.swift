@@ -49,6 +49,10 @@ final class BluetoothClassicTransport {
         }
 
         let normalizedTarget = normalize(identifier)
+        guard !normalizedTarget.isEmpty else {
+            throw BluetoothTransportError.deviceNotFound(identifier)
+        }
+
         if let device = pairedDevices().first(where: { device in
             normalize(device.name ?? "").contains(normalizedTarget)
                 || normalize(device.addressString ?? "").contains(normalizedTarget)
@@ -81,7 +85,7 @@ final class BluetoothClassicTransport {
         let device = try findDevice(identifier: deviceIdentifier)
         let deviceName = device.name ?? fallbackName
         let profile = HeadphoneAdapterRegistry.shared.profile(for: deviceName)
-        var channelIDs = profile.rfcommChannelIDs
+        var channelIDs = profile?.rfcommChannelIDs ?? [15, 18, 12, 19]
         if XiaomiDeviceProfile.isLikelyXiaomiAudioDevice(deviceName) {
             channelIDs = mergeChannels(
                 preferred: XiaomiDeviceProfile.preferredRFCOMMChannelIDs(for: device),

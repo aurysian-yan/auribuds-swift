@@ -83,10 +83,11 @@ final class BluetoothMonitor: NSObject, ObservableObject {
         }
 
         classicSnapshots = Dictionary(
-            uniqueKeysWithValues: devices.map { device in
+            devices.map { device in
                 let snapshot = snapshot(for: device, isConnected: device.isConnected())
                 return (snapshot.id, snapshot)
-            }
+            },
+            uniquingKeysWith: { first, _ in first }
         )
 
         publishAvailableDevices()
@@ -116,31 +117,61 @@ final class BluetoothMonitor: NSObject, ObservableObject {
 #endif
 
     private func publishAvailableDevices() {
-        var allSnapshots = bleSnapshots
-#if os(macOS)
-        allSnapshots = classicSnapshots.merging(bleSnapshots) { classic, _ in classic }
-#endif
-        let snapshots = Array(allSnapshots.values)
+        var merged = classicSnapshots
+    #if os(macOS)
+        for (_, bleSnapshot) in bleSnapshots {
+            let bleName = OppoDeviceProfile.normalized(bleSnapshot.name)
+
+            let matchingClassicKeys = merged.keys.filter { key in
+                guard let classic = merged[key] else { return false }
+                return OppoDeviceProfile.normalized(classic.name) == bleName
+            }
+
+            let sameNameBLECount = bleSnapshots.values.filter {
+                OppoDeviceProfile.normalized($0.name) == bleName
+            }.count
+
+            let shouldMerge: Bool
+            if matchingClassicKeys.count == 1 && sameNameBLECount == 1 {
+                let classic = merged[matchingClassicKeys[0]]!
+                let statesComplementary = classic.isConnected != bleSnapshot.isConnected
+                let statesConsistent = classic.isConnected == bleSnapshot.isConnected
+                let timeClose = abs(classic.timestamp.timeIntervalSince(bleSnapshot.timestamp)) < 5.0
+                shouldMerge = (statesComplementary || statesConsistent) && timeClose
+            } else {
+                shouldMerge = false
+            }
+
+            if shouldMerge {
+                if bleSnapshot.isConnected && !merged[matchingClassicKeys[0]]!.isConnected {
+                    merged[matchingClassicKeys[0]] = bleSnapshot
+                }
+            } else {
+                merged[bleSnapshot.id] = bleSnapshot
+            }
+        }
+    #else
+        merged = bleSnapshots
+    #endif
+
+        availableDevices = Array(merged.values)
             .sorted { first, second in
                 first.name.localizedStandardCompare(second.name) == .orderedAscending
             }
-
-        DispatchQueue.main.async { [weak self] in
-            self?.availableDevices = snapshots
-        }
     }
-
-    private func publish(_ snapshot: BluetoothDeviceSnapshot, update: @escaping (BluetoothDeviceSnapshot) -> Void) {
-        DispatchQueue.main.async {
+        
+        private func publish(
+            _ snapshot: BluetoothDeviceSnapshot,
+            update: @escaping (BluetoothDeviceSnapshot) -> Void
+        ) {
             update(snapshot)
         }
-    }
 
-#if os(macOS)
-    private func snapshot(for device: IOBluetoothDevice, isConnected: Bool) -> BluetoothDeviceSnapshot {
-        BluetoothDeviceSnapshot(
-            name: device.nameOrAddress ?? device.name ?? device.addressString ?? "Bluetooth Device",
-            address: normalizedAddress(device.addressString),
+    #if os(macOS)
+        private func snapshot(for device: IOBluetoothDevice, isConnected: Bool) -> BluetoothDeviceSnapshot {
+            BluetoothDeviceSnapshot(
+                name: device.nameOrAddress ?? device.name ?? device.addressString ?? "Bluetooth Device",
+                address: normalizedAddress(device.addressString),
             isConnected: isConnected,
             timestamp: Date(),
             majorDeviceClass: UInt32(device.deviceClassMajor),
