@@ -10,14 +10,13 @@
 		9345E0DF2FE2920200DC79D9 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9345E0DE2FE2920200DC79D9 /* SwiftUI.framework */; };
 		9345E0EE2FE2920300DC79D9 /* AuriBudsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9345E0DB2FE2920200DC79D9 /* AuriBudsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9345E0F52FE2C58800DC79D9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9345E0F42FE2C58800DC79D9 /* WidgetKit.framework */; };
-		9345E0FD2FE2C59800DC79D9 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9345E0FB2FE2C59800DC79D9 /* Info.plist */; };
 		9345E0FE2FE2C59800DC79D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9345E0F72FE2C59800DC79D9 /* Assets.xcassets */; };
 		9345E0FF2FE2C59800DC79D9 /* AuriBudsWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0FA2FE2C59800DC79D9 /* AuriBudsWidgetControl.swift */; };
 		9345E1002FE2C59800DC79D9 /* AuriBudsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0F82FE2C59800DC79D9 /* AuriBudsWidget.swift */; };
 		9345E1012FE2C59800DC79D9 /* AuriBudsWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0F92FE2C59800DC79D9 /* AuriBudsWidgetBundle.swift */; };
 		9345E1022FE2C59800DC79D9 /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9345E0F62FE2C59800DC79D9 /* AppIntent.swift */; };
-		9345E69B2FE43F3100DC79D9 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9345E69A2FE43F3100DC79D9 /* AppIcon.icon */; };
-		9345E69C2FE43F3100DC79D9 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 9345E69A2FE43F3100DC79D9 /* AppIcon.icon */; };
+		93F3DFAB2FE6EB36007FD8B8 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 93F3DFAA2FE6EB36007FD8B8 /* AppIcon.icon */; };
+		93F3DFAC2FE6EB36007FD8B8 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 93F3DFAA2FE6EB36007FD8B8 /* AppIcon.icon */; };
 		93F49AF72FE2C5B900AE665 /* WidgetHeadphoneData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F49AF62FE2C5B900AE665 /* WidgetHeadphoneData.swift */; };
 		93F49AF92FE2C5B900AE665 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93F49AF82FE2C5B900AE665 /* CoreBluetooth.framework */; };
 		AA1000010000000000000001 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1000020000000000000001 /* IOBluetooth.framework */; };
@@ -58,8 +57,8 @@
 		9345E0F92FE2C59800DC79D9 /* AuriBudsWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuriBudsWidgetBundle.swift; sourceTree = "<group>"; };
 		9345E0FA2FE2C59800DC79D9 /* AuriBudsWidgetControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuriBudsWidgetControl.swift; sourceTree = "<group>"; };
 		9345E0FB2FE2C59800DC79D9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9345E1072FE2C5B900DC79D9 /* AuriBudsIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = AuriBudsIOS.app; path = AuriBuds.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9345E69A2FE43F3100DC79D9 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		9345E1072FE2C5B900DC79D9 /* AuriBuds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AuriBuds.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		93F3DFAA2FE6EB36007FD8B8 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		93F49AF62FE2C5B900AE665 /* WidgetHeadphoneData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHeadphoneData.swift; sourceTree = "<group>"; };
 		93F49AF82FE2C5B900AE665 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/CoreBluetooth.framework; sourceTree = DEVELOPER_DIR; };
 		AA1000020000000000000001 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
@@ -132,7 +131,7 @@
 				AA1000070000000000000001 /* Frameworks */,
 				AA1000080000000000000001 /* Products */,
 				9345E0FC2FE2C59800DC79D9 /* AuriBudsWidget */,
-				9345E69A2FE43F3100DC79D9 /* AppIcon.icon */,
+				93F3DFAA2FE6EB36007FD8B8 /* AppIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -153,7 +152,7 @@
 			children = (
 				AA1000030000000000000001 /* AuriBuds.app */,
 				9345E0DB2FE2920200DC79D9 /* AuriBudsWidgetExtension.appex */,
-				9345E1072FE2C5B900DC79D9 /* AuriBudsIOS.app */,
+				9345E1072FE2C5B900DC79D9 /* AuriBuds.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -200,7 +199,7 @@
 			packageProductDependencies = (
 			);
 			productName = AuriBudsIOS;
-			productReference = 9345E1072FE2C5B900DC79D9 /* AuriBudsIOS.app */;
+			productReference = 9345E1072FE2C5B900DC79D9 /* AuriBuds.app */;
 			productType = "com.apple.product-type.application";
 		};
 		AA1000090000000000000001 /* AuriBuds */ = {
@@ -274,7 +273,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9345E0FD2FE2C59800DC79D9 /* Info.plist in Resources */,
 				9345E0FE2FE2C59800DC79D9 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -283,7 +281,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9345E69B2FE43F3100DC79D9 /* AppIcon.icon in Resources */,
+				93F3DFAB2FE6EB36007FD8B8 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,7 +289,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9345E69C2FE43F3100DC79D9 /* AppIcon.icon in Resources */,
+				93F3DFAC2FE6EB36007FD8B8 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

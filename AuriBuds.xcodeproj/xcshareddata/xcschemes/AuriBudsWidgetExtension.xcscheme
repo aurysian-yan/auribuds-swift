@@ -18,6 +18,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9345E0DA2FE2920200DC79D9"
                BuildableName = "AuriBudsWidgetExtension.appex"
+               BlueprintName = "AuriBudsWidgetExtension"
                ReferencedContainer = "container:AuriBuds.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,6 +32,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AA1000090000000000000001"
                BuildableName = "AuriBuds.app"
+               BlueprintName = "AuriBuds"
                ReferencedContainer = "container:AuriBuds.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -64,6 +66,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9345E0DA2FE2920200DC79D9"
             BuildableName = "AuriBudsWidgetExtension.appex"
+            BlueprintName = "AuriBudsWidgetExtension"
             ReferencedContainer = "container:AuriBuds.xcodeproj">
          </BuildableReference>
       </RemoteRunnable>
@@ -72,6 +75,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA1000090000000000000001"
             BuildableName = "AuriBuds.app"
+            BlueprintName = "AuriBuds"
             ReferencedContainer = "container:AuriBuds.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -107,6 +111,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA1000090000000000000001"
             BuildableName = "AuriBuds.app"
+            BlueprintName = "AuriBuds"
             ReferencedContainer = "container:AuriBuds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -19,6 +19,7 @@
   ],
   "groups" : [
     {
+      "blend-mode" : "normal",
       "blur-material-specializations" : [
         {
           "value" : 0.06
@@ -34,7 +35,7 @@
             {
               "value" : {
                 "linear-gradient" : [
-                  "display-p3:0.15514,0.72598,0.68511,0.57000",
+                  "display-p3:0.15514,0.72598,0.68511,0.59000",
                   "display-p3:0.00000,0.05477,0.82457,0.71000"
                 ]
               }
@@ -101,7 +102,7 @@
       },
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.6
+        "opacity" : 1.6
       },
       "specular-specializations" : [
         {
